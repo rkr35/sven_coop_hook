@@ -19,10 +19,12 @@ debug = 0
 [dependencies]
 log = "0.4"
 simplelog = "0.7"
+wchar = "0.6"
 winapi = { version = "0.3", features = [
     "consoleapi",
-    "minwindef",
+    "errhandlingapi",
     "libloaderapi",
+    "minwindef",
     "processthreadsapi",
     "wincon",
     "winnt",
