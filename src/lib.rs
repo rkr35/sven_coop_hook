@@ -49,6 +49,7 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
 
         if let Err(e) = TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed) {
             eprintln!("Failed to initialize logger: {}", e);
+            idle();
         } else {
             info!("Initialized logger.");
             hook();
