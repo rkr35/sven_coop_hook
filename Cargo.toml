@@ -17,3 +17,14 @@ codegen-units = 1
 debug = 0
 
 [dependencies]
+log = "0.4"
+simplelog = "0.7"
+winapi = { version = "0.3", features = [
+    "consoleapi",
+    "minwindef",
+    "libloaderapi",
+    "processthreadsapi",
+    "wincon",
+    "winnt",
+    "winuser",
+]}
