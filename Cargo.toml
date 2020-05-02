@@ -26,6 +26,7 @@ winapi = { version = "0.3", features = [
     "libloaderapi",
     "minwindef",
     "processthreadsapi",
+    "psapi",
     "synchapi",
     "wincon",
     "winnt",

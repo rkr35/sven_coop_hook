@@ -22,6 +22,7 @@ use winapi::{
 };
 
 mod macros;
+mod module;
 mod hook;
 use hook::Hook;
 
@@ -36,8 +37,13 @@ fn idle() {
 }
 
 fn hook() {
-    let _hook = Hook;
-    idle();
+    match Hook::new() {
+        Ok(_hook) => { idle(); },
+        Err(e) => {
+            eprintln!("{:#?}", e);
+            idle();
+        },
+    };
 }
 
 extern "system" fn on_attach(dll: LPVOID) -> DWORD {
