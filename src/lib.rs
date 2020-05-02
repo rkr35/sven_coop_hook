@@ -10,6 +10,7 @@ use winapi::{
         consoleapi::AllocConsole,
         libloaderapi::{DisableThreadLibraryCalls, FreeLibraryAndExitThread},
         processthreadsapi::CreateThread,
+        synchapi::Sleep,
         wincon::FreeConsole,
         winnt::DLL_PROCESS_ATTACH,
         winuser::{MB_OK, MessageBoxW},
@@ -51,9 +52,9 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
         } else {
             info!("Initialized logger.");
             hook();
+            info!("Sleeping 1 second before detaching.");
+            unsafe { Sleep(1000) };
         }
-
-        idle();
     });
 
     if result.is_err() {
