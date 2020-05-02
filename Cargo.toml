@@ -10,4 +10,10 @@ crate-type = ["cdylib"]
 [profile.dev]
 panic = 'unwind'
 
+[profile.release]
+panic = 'unwind'
+lto = 'fat'
+codegen-units = 1
+debug = 0
+
 [dependencies]
