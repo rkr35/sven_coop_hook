@@ -21,6 +21,8 @@ use winapi::{
 };
 
 mod macros;
+mod hook;
+use hook::Hook;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
     unsafe { MessageBoxW(ptr::null_mut(), text.as_ptr(), caption.as_ptr(), MB_OK); }
@@ -30,6 +32,11 @@ fn idle() {
     info!("Idling. Press enter to continue.");
     let mut sentinel = [0; 2];
     let _ = io::stdin().read_exact(&mut sentinel);
+}
+
+fn hook() {
+    let _hook = Hook;
+    idle();
 }
 
 extern "system" fn on_attach(dll: LPVOID) -> DWORD {
@@ -43,6 +50,7 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
             eprintln!("Failed to initialize logger: {}", e);
         } else {
             info!("Initialized logger.");
+            hook();
         }
 
         idle();
