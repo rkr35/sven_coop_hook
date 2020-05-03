@@ -1,5 +1,7 @@
 use crate::module::{Module, Error as ModuleError};
 
+use log::info;
+
 #[derive(Debug)]
 pub enum Error<'a> {
     Module(ModuleError<'a>)
@@ -25,6 +27,6 @@ impl Hook {
 
 impl Drop for Hook {
     fn drop(&mut self) {
-        
+        info!("Hook dropped.");
     }
 }
