@@ -2,7 +2,7 @@ use std::io::{self, Read};
 use std::panic;
 use std::ptr;
 
-use log::{error, info};
+use log::info;
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use wchar::wch_c as w;
 use winapi::{
@@ -19,9 +19,10 @@ use winapi::{
 };
 
 mod hook;
+
 mod macros;
 mod module;
-use hook::Hook;
+mod vgui;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
     unsafe {
@@ -35,18 +36,6 @@ fn idle() {
     let _ = io::stdin().read_exact(&mut sentinel);
 }
 
-fn hook() {
-    match Hook::new() {
-        Ok(_hook) => {
-            idle();
-        }
-        Err(e) => {
-            error!("Hook error: {:?}", e);
-            idle();
-        }
-    };
-}
-
 extern "system" fn on_attach(dll: LPVOID) -> DWORD {
     let result = panic::catch_unwind(|| {
         unsafe { AllocConsole() };
@@ -57,7 +46,8 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
             idle();
         } else {
             info!("Initialized logger.");
-            hook();
+            msg_box(w!("Press OK to hook."), w!("info"));
+            hook::run();
             info!("Sleeping 1 second before detaching.");
             unsafe { Sleep(1000) };
         }
