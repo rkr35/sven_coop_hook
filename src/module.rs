@@ -9,12 +9,8 @@ use winapi::shared::minwindef::HMODULE;
 use winapi::um::{
     libloaderapi::{GetModuleHandleW, GetProcAddress},
     processthreadsapi::GetCurrentProcess,
-    psapi::{
-        GetModuleInformation,
-        MODULEINFO,
-    }
+    psapi::{GetModuleInformation, MODULEINFO},
 };
-
 
 #[derive(Debug)]
 pub enum ErrorKind {

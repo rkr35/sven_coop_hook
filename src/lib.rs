@@ -6,6 +6,7 @@ use log::{error, info};
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use wchar::wch_c as w;
 use winapi::{
+    shared::minwindef::{BOOL, DWORD, HINSTANCE, LPVOID, TRUE},
     um::{
         consoleapi::AllocConsole,
         libloaderapi::{DisableThreadLibraryCalls, FreeLibraryAndExitThread},
@@ -13,21 +14,19 @@ use winapi::{
         synchapi::Sleep,
         wincon::FreeConsole,
         winnt::DLL_PROCESS_ATTACH,
-        winuser::{MB_OK, MessageBoxW},
+        winuser::{MessageBoxW, MB_OK},
     },
-
-    shared::{
-        minwindef::{BOOL, DWORD, HINSTANCE, LPVOID, TRUE},
-    }
 };
 
+mod hook;
 mod macros;
 mod module;
-mod hook;
 use hook::Hook;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
-    unsafe { MessageBoxW(ptr::null_mut(), text.as_ptr(), caption.as_ptr(), MB_OK); }
+    unsafe {
+        MessageBoxW(ptr::null_mut(), text.as_ptr(), caption.as_ptr(), MB_OK);
+    }
 }
 
 fn idle() {
@@ -38,11 +37,13 @@ fn idle() {
 
 fn hook() {
     match Hook::new() {
-        Ok(_hook) => { idle(); },
+        Ok(_hook) => {
+            idle();
+        }
         Err(e) => {
             error!("Hook error: {:?}", e);
             idle();
-        },
+        }
     };
 }
 
@@ -83,7 +84,10 @@ extern "system" fn DllMain(dll: HINSTANCE, reason: DWORD, _: LPVOID) -> BOOL {
     }
 
     if let Err(error_code) = unsafe { win_call!(DisableThreadLibraryCalls, dll) } {
-        let text = wide_format!("DisableThreadLibraryCalls failed. GetLastError = {:#x}", error_code);
+        let text = wide_format!(
+            "DisableThreadLibraryCalls failed. GetLastError = {:#x}",
+            error_code
+        );
         msg_box(&text, w!("DllMain error"));
     } else if let Err(error_code) = unsafe { win_call!(CreateThread, ptr::null_mut(), 0, Some(on_attach), dll.cast(), 0, ptr::null_mut()) } {
         let text = wide_format!("CreateThread failed. GetLastError = {:#x}", error_code);

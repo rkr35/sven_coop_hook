@@ -1,10 +1,10 @@
-use crate::module::{Module, Error as ModuleError};
+use crate::module::{Error as ModuleError, Module};
 
 use log::info;
 
 #[derive(Debug)]
 pub enum Error<'a> {
-    Module(ModuleError<'a>)
+    Module(ModuleError<'a>),
 }
 
 impl<'a> From<ModuleError<'a>> for Error<'a> {
