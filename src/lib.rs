@@ -2,7 +2,7 @@ use std::io::{self, Read};
 use std::panic;
 use std::ptr;
 
-use log::info;
+use log::{error, info};
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use wchar::wch_c as w;
 use winapi::{
@@ -40,7 +40,7 @@ fn hook() {
     match Hook::new() {
         Ok(_hook) => { idle(); },
         Err(e) => {
-            eprintln!("{:#?}", e);
+            error!("Hook error: {:?}", e);
             idle();
         },
     };
