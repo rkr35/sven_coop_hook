@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [profile.dev]
 panic = 'unwind'
+debug = true
 
 [profile.release]
 panic = 'unwind'
