@@ -14,13 +14,13 @@ impl<'a> From<ModuleError<'a>> for Error<'a> {
 }
 
 pub struct Hook {
-    _hw: Module,
+    _hw: Module<'static>,
 }
 
 impl Hook {
     pub fn new() -> Result<Self, Error<'static>> {
         Ok(Self {
-            _hw: Module::from("hw.dll")?
+            _hw: Module::from("hw.dll")?,
         })
     }
 }
