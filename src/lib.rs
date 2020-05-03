@@ -47,8 +47,6 @@ fn hook() {
 }
 
 extern "system" fn on_attach(dll: LPVOID) -> DWORD {
-    msg_box(w!("Okay."), w!("on_attach"));
-
     let result = panic::catch_unwind(|| {
         unsafe { AllocConsole() };
         println!("Allocated console.");
