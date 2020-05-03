@@ -100,7 +100,6 @@ impl<'a> Module<'a> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn create_interface(&self, name: &str) -> Result<usize, Error> {
         type CreateInterface = extern "system" fn(name: *const c_char, return_code: *mut i32) -> usize;
         let function = unsafe { mem::transmute::<usize, CreateInterface>(self.create_interface) };
