@@ -18,6 +18,7 @@ pub enum ErrorKind {
     GetModuleInformationFailed,
     GetCreateInterfaceFailed,
     RustStrToCStrErr,
+    InterfaceIsNull,
 }
 
 #[derive(Debug)]
@@ -96,10 +97,14 @@ impl<'a> Module<'a> {
         }
     }
 
-    pub fn create_interface(&self, name: &str) -> Result<usize, Error> {
-        type CreateInterface = extern "system" fn(name: *const c_char, return_code: *mut i32) -> usize;
-        let function = unsafe { mem::transmute::<usize, CreateInterface>(self.create_interface) };
+    pub fn create_interface<T>(&self, name: &str) -> Result<&'static mut T, Error> {
+        type CreateInterface<T> = extern fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
+        
+        let function = unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
+
         let interface = CString::new(name).map_err(|_| Error::new(self.name, ErrorKind::RustStrToCStrErr))?;
-        Ok(function(interface.as_ptr(), ptr::null_mut()))
+        let interface = function(interface.as_ptr(), ptr::null_mut());
+
+        interface.ok_or_else(|| Error::new(self.name, ErrorKind::InterfaceIsNull))
     }
 }
