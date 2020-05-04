@@ -1,16 +1,14 @@
 use crate::idle;
+use crate::memory::Patch;
 use crate::module::{Error as ModuleError, Module};
 use crate::vgui::Panel;
 use std::mem;
 
 use log::{error, info};
-use winapi::um::{
-    memoryapi::VirtualProtect,
-    winnt::PAGE_EXECUTE_READWRITE,
-};
 
 struct Hook<'a> {
-    panel: &'a mut Panel,
+    _panel: &'a mut Panel,
+    _paint_traverse_hook: Patch<usize>,
 }
 
 impl<'a> Drop for Hook<'a> {
@@ -20,25 +18,23 @@ impl<'a> Drop for Hook<'a> {
 }
 
 struct Modules {
-    hw: Module<'static>,
+    _hw: Module<'static>,
     vgui2: Module<'static>,
 }
 
 impl Modules {
     fn new() -> Result<Self, ModuleError<'static>> {
         Ok(Self {
-            hw: Module::from("hw.dll")?,
+            _hw: Module::from("hw.dll")?,
             vgui2: Module::from("vgui2.dll")?,
         })
     }
 }
 
 static mut OLD_PAINT_TRAVERSE: usize = 0;
-
-// 0x1ef68980 {vtable=vgui2.dll!0x52f9c148 {1391708272} }
 extern "fastcall" fn my_paint_traverse(this: usize, edx: usize, panel: usize, force_repaint: bool, allow_force: bool) {
     type PaintTraverseFn = extern "fastcall" fn(usize, usize, usize, bool, bool);
-    let original = unsafe { mem::transmute::<usize, PaintTraverseFn>(OLD_PAINT_TRAVERSE) };
+    let original: PaintTraverseFn = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
     original(this, edx, panel, force_repaint, allow_force);
     info!("Called original.");
 }
@@ -46,18 +42,20 @@ extern "fastcall" fn my_paint_traverse(this: usize, edx: usize, panel: usize, fo
 fn hook_and_idle(modules: &Modules) -> Result<(), ModuleError> {
     let panel = modules.vgui2.create_interface::<Panel>("VGUI_Panel007")?;
     info!("panel = {:#x?}", panel as *const _);
-    unsafe {
-        let ptr = panel.vtable.add(41);
-        OLD_PAINT_TRAVERSE = *ptr;
-        info!("OLD_PAINT_TRAVERSE = {:#x?}", OLD_PAINT_TRAVERSE);
-        let mut old_protect = 0;
-        VirtualProtect(ptr.cast(), 4, PAGE_EXECUTE_READWRITE, &mut old_protect);
-        *ptr = my_paint_traverse as usize;
-        VirtualProtect(ptr.cast(), 4, old_protect, &mut old_protect);
-    }
-    let _hook = Hook { panel };
+
+    let patch = Patch::new(unsafe { panel.vtable.add(41) }, my_paint_traverse as usize).unwrap();
+    unsafe { OLD_PAINT_TRAVERSE = patch.old_value; }
+
+    let _hook = Hook {
+        _panel: panel,
+        _paint_traverse_hook: patch
+    };
+
     idle();
     Ok(())
+
+    // `_hook` is automatically dropped here.
+    // Any cleanup logic for Hook should be specified in its implementation of Drop.
 }
 
 pub fn run() {
