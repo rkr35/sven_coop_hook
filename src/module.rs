@@ -48,7 +48,7 @@ impl<'a> Module<'a> {
 
         let (info, create_interface) = unsafe {
             let module = Self::get_handle(name)?;
-            let info = Self::get_info(module).ok_or(Error::new(name, GetModuleInformationFailed))?;
+            let info = Self::get_info(module).ok_or_else(|| Error::new(name, GetModuleInformationFailed))?;
 
             let proc = CString::new("CreateInterface").map_err(|_| Error::new(name, RustStrToCStrErr))?;
             let create_interface = GetProcAddress(module, proc.as_ptr());
