@@ -40,8 +40,7 @@ impl<T> Patch<T> where T: Copy + Clone {
     }
 }
 
-impl<T> Drop for Patch<T> where T: Copy + Clone {
-    fn drop(&mut self) {
+    pub unsafe fn restore(&self) {
         Self::patch(self.address, self.old_value);
     }
 }
