@@ -36,12 +36,43 @@ extern "fastcall" fn my_paint_traverse(this: usize, edx: usize, panel: usize, fo
     type PaintTraverseFn = extern "fastcall" fn(usize, usize, usize, bool, bool);
     let original: PaintTraverseFn = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
     original(this, edx, panel, force_repaint, allow_force);
-    info!("Called original.");
 }
 
-fn hook_and_idle(modules: &Modules) -> Result<(), ModuleError> {
-    let panel = modules.vgui2.create_interface::<Panel>("VGUI_Panel007")?;
+#[derive(Debug)]
+pub enum Error<'a> {
+    Module(ModuleError<'a>),
+    NullVTable(&'a str),
+}
+
+impl<'a> From<ModuleError<'a>> for Error<'a> {
+    fn from(e: ModuleError) -> Error {
+        Error::Module(e)
+    }
+}
+
+fn hook_and_idle(modules: &Modules) -> Result<(), Error> {
+    const PANEL_INTERFACE: &str = "VGUI_Panel007";
+
+    #[repr(usize)]
+    enum PanelVtableIndex {
+        PaintTraverse = 41,
+        Max = 60
+    }
+
+    let panel = modules.vgui2.create_interface::<Panel>(PANEL_INTERFACE)?;
     info!("panel = {:#x?}", panel as *const _);
+
+    if panel.vtable.is_null() {
+        return Err(Error::NullVTable(PANEL_INTERFACE));
+    }
+
+    let mut vtable_copy = [0; PanelVtableIndex::Max as _];
+
+    // Important: vtable_copy must outlive vtable_copy.as_mut_ptr().
+    // Otherwise the pointer will dangle.
+    unsafe { panel.vtable.copy_to_nonoverlapping(vtable_copy.as_mut_ptr(), PanelVtableIndex::Max as _); }
+
+    vtable_copy[PanelVtableIndex::PaintTraverse as usize] = my_paint_traverse as usize;
 
     let patch = Patch::new(unsafe { panel.vtable.add(41) }, my_paint_traverse as usize).unwrap();
     unsafe { OLD_PAINT_TRAVERSE = patch.old_value; }
