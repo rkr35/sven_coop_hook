@@ -30,6 +30,7 @@ pub enum ErrorKind<'a> {
     NullInterface(&'a str),
 }
 
+#[derive(Error, Debug)]
 #[error("\"{module}\" error: {kind}")]
 pub struct Error<'a> {
     module: &'a str,
