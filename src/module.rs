@@ -4,7 +4,7 @@ use std::mem::{self, MaybeUninit};
 use std::os::raw::c_char;
 use std::ptr;
 
-use log::info;
+use thiserror::Error;
 use winapi::shared::minwindef::HMODULE;
 use winapi::um::{
     libloaderapi::{GetModuleHandleW, GetProcAddress},
@@ -12,23 +12,32 @@ use winapi::um::{
     psapi::{GetModuleInformation, MODULEINFO},
 };
 
-#[derive(Debug)]
-pub enum ErrorKind {
+#[derive(Error, Debug)]
+pub enum ErrorKind<'a> {
+    #[error("failed to get a handle to the module")]
     NullModule,
-    GetModuleInformationFailed,
-    GetCreateInterfaceFailed,
-    RustStrToCStrErr,
-    InterfaceIsNull,
+
+    #[error("failed to query module information")]
+    GetModuleInformation,
+
+    #[error("failed to find the address of CreateInterface")]
+    GetCreateInterface,
+
+    #[error("failed to convert the Rust string \"{0}\" to a C string because it contains an interior null byte at index {1}")]
+    StrConversion(&'a str, usize),
+
+    #[error("CreateInterface returned a null pointer for the interface \"{0}\"")]
+    NullInterface(&'a str),
 }
 
 #[derive(Debug)]
 pub struct Error<'a> {
     module: &'a str,
-    kind: ErrorKind,
+    kind: ErrorKind<'a>,
 }
 
 impl<'a> Error<'a> {
-    pub fn new(module: &str, kind: ErrorKind) -> Error {
+    fn new<'m>(module: &'m str, kind: ErrorKind<'m>) -> Error<'m> {
         Error { module, kind }
     }
 }
@@ -44,43 +53,47 @@ pub struct Module<'a> {
 
 impl<'a> Module<'a> {
     pub fn from(name: &str) -> Result<Module, Error> {
-        use ErrorKind::*;
+        fn impl_from(name: &str) -> Result<Module, ErrorKind> {
+            let (info, create_interface) = unsafe {
+                let module = Module::get_handle(name)?;
+                let info = Module::get_info(module).ok_or_else(|| ErrorKind::GetModuleInformation)?;
 
-        let (info, create_interface) = unsafe {
-            let module = Self::get_handle(name)?;
-            let info = Self::get_info(module).ok_or_else(|| Error::new(name, GetModuleInformationFailed))?;
-
-            let proc = CString::new("CreateInterface").map_err(|_| Error::new(name, RustStrToCStrErr))?;
-            let create_interface = GetProcAddress(module, proc.as_ptr());
-    
-            if create_interface.is_null() {
-                return Err(Error::new(name, GetCreateInterfaceFailed));
-            }
-
-            (info, create_interface as usize)
-        };
+                let create_interface = GetProcAddress(module, b"CreateInterface\0".as_ptr().cast());
         
-        let base = info.lpBaseOfDll as usize;
-        let size = info.SizeOfImage as usize;
+                if create_interface.is_null() {
+                    return Err(ErrorKind::GetCreateInterface);
+                }
 
-        let module = Module {
-            name,
-            base,
-            size,
-            end: base + size,
-            create_interface,
-        };
+                (info, create_interface as usize)
+            };
+            
+            let base = info.lpBaseOfDll as usize;
+            let size = info.SizeOfImage as usize;
 
-        info!("{:#x?}", module);
+            let module = Module {
+                name,
+                base,
+                size,
+                end: base + size,
+                create_interface,
+            };
 
-        Ok(module)
+            log::info!("{:#x?}", module);
+
+            Ok(module)
+        }
+
+        impl_from(name).map_err(|kind| Error::new(name, kind))
     }
 
-    fn get_handle(name: &str) -> Result<HMODULE, Error> {
-        let handle = unsafe { GetModuleHandleW(wide_format!("{}", name).as_ptr()) };
+    fn get_handle(name: &str) -> Result<HMODULE, ErrorKind> {
+        let handle = unsafe {
+            let wide_name = wide_format!("{}", name);
+            GetModuleHandleW(wide_name.as_ptr())
+        };
 
         if handle.is_null() {
-            Err(Error::new(name, ErrorKind::NullModule))
+            Err(ErrorKind::NullModule)
         } else {
             Ok(handle)
         }
@@ -97,14 +110,21 @@ impl<'a> Module<'a> {
         }
     }
 
-    pub fn create_interface<T>(&self, name: &str) -> Result<&'static mut T, Error> {
+    pub fn create_interface<'s, T>(&'s self, name: &'s str) -> Result<&'static mut T, Error> {
         type CreateInterface<T> = extern fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
+        let create_interface = unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
         
-        let function = unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
+        let interface = CString::new(name)
+            .map_err(|nul_error| 
+                Error::new(self.name,
+                    ErrorKind::StrConversion(
+                        name,
+                        nul_error.nul_position()
+                    )
+                )
+            )?;
 
-        let interface = CString::new(name).map_err(|_| Error::new(self.name, ErrorKind::RustStrToCStrErr))?;
-        let interface = function(interface.as_ptr(), ptr::null_mut());
-
-        interface.ok_or_else(|| Error::new(self.name, ErrorKind::InterfaceIsNull))
+        let interface = create_interface(interface.as_ptr(),ptr::null_mut());
+        interface.ok_or_else(|| Error::new(self.name, ErrorKind::NullInterface(name)))
     }
 }
