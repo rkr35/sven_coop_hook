@@ -124,7 +124,7 @@ impl<'a> Module<'a> {
                 )
             )?;
 
-        let interface = create_interface(interface.as_ptr(),ptr::null_mut());
+        let interface = create_interface(interface.as_ptr(), ptr::null_mut());
         interface.ok_or_else(|| Error::new(self.name, ErrorKind::NullInterface(name)))
     }
 }
