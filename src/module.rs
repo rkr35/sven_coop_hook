@@ -57,47 +57,43 @@ pub struct Module {
 
 impl Module {
     pub fn from(name: &str) -> Result<Module, Error> {
-        fn impl_from(name: &str) -> Result<Module, ErrorKind> {
-            let (info, create_interface) = unsafe {
-                let module = Module::get_handle(name)?;
-                let info = Module::get_info(module).ok_or_else(|| ErrorKind::GetModuleInformation)?;
+        let (info, create_interface) = unsafe {
+            let module = Module::get_handle(name)?;
+            let info = Module::get_info(module).ok_or_else(|| Error::new(name, ErrorKind::GetModuleInformation))?;
 
-                let create_interface = GetProcAddress(module, b"CreateInterface\0".as_ptr().cast());
+            let create_interface = GetProcAddress(module, b"CreateInterface\0".as_ptr().cast());
+    
+            if create_interface.is_null() {
+                return Err(Error::new(name, ErrorKind::GetCreateInterface));
+            }
+
+            (info, create_interface as usize)
+        };
         
-                if create_interface.is_null() {
-                    return Err(ErrorKind::GetCreateInterface);
-                }
+        let base = info.lpBaseOfDll as usize;
+        let size = info.SizeOfImage as usize;
 
-                (info, create_interface as usize)
-            };
-            
-            let base = info.lpBaseOfDll as usize;
-            let size = info.SizeOfImage as usize;
+        let module = Module {
+            name: String::from(name),
+            base,
+            size,
+            end: base + size,
+            create_interface,
+        };
 
-            let module = Module {
-                name: String::from(name),
-                base,
-                size,
-                end: base + size,
-                create_interface,
-            };
+        log::info!("{:#x?}", module);
 
-            log::info!("{:#x?}", module);
-
-            Ok(module)
-        }
-
-        impl_from(name).map_err(|kind| Error::new(name, kind))
+        Ok(module)
     }
 
-    fn get_handle(name: &str) -> Result<HMODULE, ErrorKind> {
+    fn get_handle(name: &str) -> Result<HMODULE, Error> {
         let handle = unsafe {
             let wide_name = wide_format!("{}", name);
             GetModuleHandleW(wide_name.as_ptr())
         };
 
         if handle.is_null() {
-            Err(ErrorKind::NullModule)
+            Err(Error::new(name, ErrorKind::NullModule))
         } else {
             Ok(handle)
         }
