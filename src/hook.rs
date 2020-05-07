@@ -14,6 +14,9 @@ pub enum Error<'a> {
 
     #[error("interface \"{0}\" has a null vtable")]
     NullVtable(&'a str),
+
+    #[error("tried to patch a null pointer for {0}")]
+    NullPatch(&'a str),
 }
 
 impl<'a> From<ModuleError<'a>> for Error<'a> {
@@ -74,11 +77,13 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
         // Create storage for our vtable copy.
         let mut vtable = [0; PanelVtable::NumEntries as usize];
         
-        // Copy the original Panel vtable to our vtable.
-        unsafe { panel.vtable.copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len()); }
+        unsafe { 
+            // Copy the original Panel vtable to our vtable.
+            panel.vtable.copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len());
 
-        // Hook PaintTraverse.
-        vtable[PanelVtable::PaintTraverse as usize] = my_paint_traverse as usize;
+            // Hook PaintTraverse and save the original.
+            OLD_PAINT_TRAVERSE = mem::replace(&mut vtable[PanelVtable::PaintTraverse as usize], my_paint_traverse as usize);
+        }
 
         vtable
     };
@@ -87,16 +92,7 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     // SAFETY: You must ensure that `modified_vtable` outlives `modified_vtable.as_mut_ptr()`.
     // Otherwise this mutable pointer will be a dangling reference. The easiest way to satisfy
     // this safety requirement is to not move `modified_vtable` while this patch is alive.
-    let patch = unsafe {
-        // TODO: Gracefully handle `.unwrap()`
-        let p = Patch::new(&mut panel.vtable, modified_vtable.as_mut_ptr()).unwrap();
-        
-        // Save the address of the original PaintTraverse function, so we can call it in our hook.
-        // TODO: Gracefully handle null vtable entry.
-        OLD_PAINT_TRAVERSE = *p.old_value.add(PanelVtable::PaintTraverse as usize);
-
-        p
-    };
+    let patch = unsafe { Patch::new(&mut panel.vtable, modified_vtable.as_mut_ptr()) .ok_or(Error::NullPatch("panel vtable"))? };
 
     {
         let _hook = Hook {
