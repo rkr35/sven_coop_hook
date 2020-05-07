@@ -48,8 +48,8 @@ impl Modules {
 }
 
 static mut OLD_PAINT_TRAVERSE: usize = 0;
-extern "fastcall" fn my_paint_traverse(this: usize, edx: usize, panel: usize, force_repaint: bool, allow_force: bool) {
-    let original: extern "fastcall" fn(usize, usize, usize, bool, bool) = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
+extern "fastcall" fn my_paint_traverse(this: &Panel, edx: usize, panel: usize, force_repaint: bool, allow_force: bool) {
+    let original: extern "fastcall" fn(&Panel, usize, usize, bool, bool) = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
     original(this, edx, panel, force_repaint, allow_force);
 }
 
