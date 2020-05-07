@@ -2,7 +2,7 @@ use std::io::{self, Read};
 use std::panic;
 use std::ptr;
 
-use log::info;
+use log::{error, info};
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use wchar::wch_c as w;
 use winapi::{
@@ -47,7 +47,10 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
         } else {
             info!("Initialized logger.");
             msg_box(w!("Press OK to hook."), w!("info"));
-            hook::run();
+            if let Err(e) = hook::run() {
+                error!("hook error: {}", e);
+                idle();
+            }
             info!("Sleeping 1 second before detaching.");
             unsafe { Sleep(1000) };
         }
