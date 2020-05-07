@@ -22,7 +22,7 @@ mod hook;
 mod macros;
 mod memory;
 mod module;
-mod vgui;
+mod vgui2;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
     unsafe {

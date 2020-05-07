@@ -1,7 +1,7 @@
 use crate::idle;
 use crate::memory::Patch;
 use crate::module::{Error as ModuleError, Module};
-use crate::vgui::Panel;
+use crate::vgui2;
 use std::mem;
 
 use log::{error, info};
@@ -53,31 +53,25 @@ impl Modules {
 }
 
 static mut OLD_PAINT_TRAVERSE: usize = 0;
-extern "fastcall" fn my_paint_traverse(this: &Panel, edx: usize, panel: usize, force_repaint: bool, allow_force: bool) {
-    let original: extern "fastcall" fn(&Panel, usize, usize, bool, bool) = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
+extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: usize, force_repaint: bool, allow_force: bool) {
+    let original: extern "fastcall" fn(&vgui2::Panel, usize, usize, bool, bool) = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
     original(this, edx, panel, force_repaint, allow_force);
 }
 
 fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
-    const PANEL_INTERFACE: &str = "VGUI_Panel007";
-
-    #[repr(usize)]
-    enum PanelVtable {
-        PaintTraverse = 41,
-        NumEntries = 60,
-    }
-
-    let panel = modules.vgui2.create_interface::<Panel>(PANEL_INTERFACE)?;
+    let panel = modules.vgui2.create_interface::<vgui2::Panel>(vgui2::panel::INTERFACE)?;
 
     info!("panel = {:#x?}", panel as *const _);
 
     if panel.vtable.is_null() {
-        return Err(Error::NullVtable(PANEL_INTERFACE));
+        return Err(Error::NullVtable(vgui2::panel::INTERFACE));
     }
 
     let mut modified_vtable = {
+        use vgui2::panel::Vtable;
+
         // Create storage for our vtable copy.
-        let mut vtable = [0; PanelVtable::NumEntries as usize];
+        let mut vtable = [0; Vtable::NumEntries as usize];
         
         unsafe { 
             // Copy the original Panel vtable to our vtable.
@@ -87,7 +81,7 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
 
             // Hook PaintTraverse and save the original.
             OLD_PAINT_TRAVERSE = mem::replace(
-                &mut vtable[PanelVtable::PaintTraverse as usize],
+                &mut vtable[Vtable::PaintTraverse as usize],
                 my_paint_traverse as usize,
             );
         }
