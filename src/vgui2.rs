@@ -20,17 +20,13 @@ pub mod panel {
     }
 
     impl Panel {
-        fn get_virtual_function_address(&self, function: Vtable) -> Option<usize> {
-            if self.vtable.is_null() {
-                None
-            } else {
-                Some(unsafe { *self.vtable.add(function as usize) })
-            }
+        fn get_virtual_function_address(&self, function: Vtable) -> usize {
+            unsafe { *self.vtable.add(function as usize) }
         }
 
         pub fn get_name<'p>(&self, panel: &'p Panel) -> Option<&'p CStr> {
             type GetName = extern "fastcall" fn(this: &Panel, edx: usize, panel: &Panel) -> *const c_char;
-            let get_name = self.get_virtual_function_address(Vtable::GetName)?;
+            let get_name = self.get_virtual_function_address(Vtable::GetName);
             let get_name: GetName = unsafe { mem::transmute(get_name) };
             
             let name = get_name(self, 0, panel);
