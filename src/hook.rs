@@ -66,13 +66,11 @@ extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: &
         if name == b"StaticPanel" {
 
         } else if name == b"BasePanel" {
-            unsafe {
-                let surface = &*SURFACE;
-                surface.set_text_color(0, 255, 0, 255);
-                surface.set_text_pos(3, 7);
-                let s = w!("The quick brown fox jumps over the lazy dog.");
-                surface.print_text(s);
-            }
+            let surface = unsafe { &*SURFACE };
+            surface.set_text_color(0, 255, 0, 255);
+            surface.set_text_pos(3, 7);
+            let s = w!("The quick brown fox jumps over the lazy dog.");
+            surface.print_text(s);
         } 
     }
 }
