@@ -13,7 +13,7 @@ pub enum Error<'a> {
     Module(ModuleError<'a>),
 
     #[error("interface \"{0}\" has a null vtable")]
-    NullVTable(&'a str),
+    NullVtable(&'a str),
 }
 
 impl<'a> From<ModuleError<'a>> for Error<'a> {
@@ -67,7 +67,7 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     info!("panel = {:#x?}", panel as *const _);
 
     if panel.vtable.is_null() {
-        return Err(Error::NullVTable(PANEL_INTERFACE));
+        return Err(Error::NullVtable(PANEL_INTERFACE));
     }
 
     let mut modified_vtable = {
