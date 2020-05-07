@@ -5,13 +5,28 @@ use crate::vgui::Panel;
 use std::mem;
 
 use log::{error, info};
+use thiserror::Error;
 
-struct Hook<'a> {
-    _panel: &'a mut Panel,
+#[derive(Error, Debug)]
+pub enum Error<'a> {
+    #[error("module error: {0}")]
+    Module(ModuleError<'a>),
+
+    #[error("interface \"{0}\" has a null vtable")]
+    NullVTable(&'a str),
+}
+
+impl<'a> From<ModuleError<'a>> for Error<'a> {
+    fn from(e: ModuleError) -> Error {
+        Error::Module(e)
+    }
+}
+
+struct Hook {
     panel_vtable: Patch<*mut usize>,
 }
 
-impl<'a> Drop for Hook<'a> {
+impl Drop for Hook {
     fn drop(&mut self) {
         unsafe { self.panel_vtable.restore(); }
         info!("Hook dropped.");
@@ -19,13 +34,13 @@ impl<'a> Drop for Hook<'a> {
 }
 
 struct Modules {
-    _hw: Module<'static>,
-    vgui2: Module<'static>,
+    _hw: Module,
+    vgui2: Module,
 }
 
 impl Modules {
-    fn new() -> Result<Self, ModuleError<'static>> {
-        Ok(Self {
+    fn new() -> Result<Modules, ModuleError<'static>> {
+        Ok(Modules {
             _hw: Module::from("hw.dll")?,
             vgui2: Module::from("vgui2.dll")?,
         })
@@ -38,19 +53,7 @@ extern "fastcall" fn my_paint_traverse(this: usize, edx: usize, panel: usize, fo
     original(this, edx, panel, force_repaint, allow_force);
 }
 
-#[derive(Debug)]
-pub enum Error<'a> {
-    Module(ModuleError<'a>),
-    NullVTable(&'a str),
-}
-
-impl<'a> From<ModuleError<'a>> for Error<'a> {
-    fn from(e: ModuleError) -> Error {
-        Error::Module(e)
-    }
-}
-
-fn hook_and_idle(modules: &Modules) -> Result<(), Error> {
+fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     const PANEL_INTERFACE: &str = "VGUI_Panel007";
 
     #[repr(usize)]
@@ -60,6 +63,7 @@ fn hook_and_idle(modules: &Modules) -> Result<(), Error> {
     }
 
     let panel = modules.vgui2.create_interface::<Panel>(PANEL_INTERFACE)?;
+
     info!("panel = {:#x?}", panel as *const _);
 
     if panel.vtable.is_null() {
@@ -96,8 +100,7 @@ fn hook_and_idle(modules: &Modules) -> Result<(), Error> {
 
     {
         let _hook = Hook {
-            _panel: panel,
-            panel_vtable: patch
+            panel_vtable: patch,
         };
 
         idle();
@@ -109,16 +112,7 @@ fn hook_and_idle(modules: &Modules) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn run() {
-    match Modules::new() {
-        Ok(modules) => if let Err(e) = hook_and_idle(&modules) {
-            error!("Hook error: {:?}", e);
-            idle();
-        },
-
-        Err(e) => {
-            error!("Modules error: {:?}", e);
-            idle();
-        }
-    }
+pub fn run() -> Result<(), Error<'static>> {
+    hook_and_idle(Modules::new()?)?;
+    Ok(())
 }

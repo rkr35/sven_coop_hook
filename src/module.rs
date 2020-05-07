@@ -33,26 +33,29 @@ pub enum ErrorKind<'a> {
 #[derive(Error, Debug)]
 #[error("\"{module}\" error: {kind}")]
 pub struct Error<'a> {
-    module: &'a str,
+    module: String,
     kind: ErrorKind<'a>,
 }
 
 impl<'a> Error<'a> {
-    fn new<'m>(module: &'m str, kind: ErrorKind<'m>) -> Error<'m> {
-        Error { module, kind }
+    fn new<'e>(module: &str, kind: ErrorKind<'e>) -> Error<'e> {
+        Error {
+            module: String::from(module),
+            kind
+        }
     }
 }
 
 #[derive(Debug)]
-pub struct Module<'a> {
-    pub name: &'a str,
+pub struct Module {
+    pub name: String,
     pub base: usize,
     pub size: usize,
     pub end: usize,
     create_interface: usize,
 }
 
-impl<'a> Module<'a> {
+impl Module {
     pub fn from(name: &str) -> Result<Module, Error> {
         fn impl_from(name: &str) -> Result<Module, ErrorKind> {
             let (info, create_interface) = unsafe {
@@ -72,7 +75,7 @@ impl<'a> Module<'a> {
             let size = info.SizeOfImage as usize;
 
             let module = Module {
-                name,
+                name: String::from(name),
                 base,
                 size,
                 end: base + size,
@@ -111,13 +114,13 @@ impl<'a> Module<'a> {
         }
     }
 
-    pub fn create_interface<'s, T>(&'s self, name: &'s str) -> Result<&'static mut T, Error> {
+    pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<&'static mut T, Error<'n>> {
         type CreateInterface<T> = extern fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
         let create_interface = unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
         
         let interface = CString::new(name)
             .map_err(|nul_error| 
-                Error::new(self.name,
+                Error::new(&self.name,
                     ErrorKind::StrConversion(
                         name,
                         nul_error.nul_position()
@@ -126,6 +129,6 @@ impl<'a> Module<'a> {
             )?;
 
         let interface = create_interface(interface.as_ptr(), ptr::null_mut());
-        interface.ok_or_else(|| Error::new(self.name, ErrorKind::NullInterface(name)))
+        interface.ok_or_else(|| Error::new(&self.name, ErrorKind::NullInterface(name)))
     }
 }
