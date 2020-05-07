@@ -12,8 +12,6 @@ pub mod surface {
         SetTextColor = 15,
         SetTextPos = 16,
         PrintText = 18,
-        FlushText = 22,
-        // NumEntries = 91,
     }
 
     #[repr(C)]
@@ -45,13 +43,6 @@ pub mod surface {
             let print_text = self.get_virtual_function_address(Vtable::PrintText);
             let print_text: PrintText = unsafe { mem::transmute(print_text) };
             print_text(self, 0, text.as_ptr(), text.len() as i32);
-        }
-
-        pub fn flush_text(&self) {
-            type FlushText = extern "fastcall" fn(this: &Surface, edx: usize);
-            let flush_text = self.get_virtual_function_address(Vtable::FlushText);
-            let flush_text: FlushText = unsafe { mem::transmute(flush_text) };
-            flush_text(self, 0);
         }
     }
 }
