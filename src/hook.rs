@@ -9,7 +9,7 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error<'a> {
-    #[error("module error: {0}")]
+    #[error("{0}")]
     Module(ModuleError<'a>),
 
     #[error("interface \"{0}\" has a null vtable")]
