@@ -1,9 +1,6 @@
 use std::mem;
 
-use winapi::um::{
-    memoryapi::VirtualProtect,
-    winnt::PAGE_EXECUTE_READWRITE,
-};
+use winapi::um::{memoryapi::VirtualProtect, winnt::PAGE_EXECUTE_READWRITE};
 
 pub struct Patch<T> where T: Copy + Clone {
     address: *mut T,
@@ -14,7 +11,7 @@ impl<T> Patch<T> where T: Copy + Clone {
     pub unsafe fn new(address: *mut T, new_value: T) -> Option<Self> {
         Some(Self {
             address,
-            old_value: Self::patch(address, new_value)?
+            old_value: Self::patch(address, new_value)?,
         })
     }
 

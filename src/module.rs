@@ -41,7 +41,7 @@ impl<'a> Error<'a> {
     fn new<'e>(module: &str, kind: ErrorKind<'e>) -> Error<'e> {
         Error {
             module: String::from(module),
-            kind
+            kind,
         }
     }
 }
@@ -115,20 +115,23 @@ impl Module {
     }
 
     pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<&'static mut T, Error<'n>> {
-        type CreateInterface<T> = extern fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
-        let create_interface = unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
-        
-        let interface = CString::new(name)
-            .map_err(|nul_error| 
-                Error::new(&self.name,
-                    ErrorKind::StrConversion(
-                        name,
-                        nul_error.nul_position()
-                    )
-                )
-            )?;
+        type CreateInterface<T> =
+            extern "C" fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
 
-        let interface = create_interface(interface.as_ptr(), ptr::null_mut());
+        let create_interface =
+            unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
+        
+        let interface = 
+            CString::new(name).map_err(|nul_error| {
+                Error::new(
+                    &self.name,
+                    ErrorKind::StrConversion(name, nul_error.nul_position()),
+                )
+            })?;
+
+        let interface =
+            create_interface(interface.as_ptr(), ptr::null_mut());
+            
         interface.ok_or_else(|| Error::new(&self.name, ErrorKind::NullInterface(name)))
     }
 }

@@ -31,7 +31,9 @@ struct Hook {
 
 impl Drop for Hook {
     fn drop(&mut self) {
-        unsafe { self.panel_vtable.restore(); }
+        unsafe {
+            self.panel_vtable.restore();
+        }
         info!("Hook dropped.");
     }
 }
@@ -62,7 +64,7 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     #[repr(usize)]
     enum PanelVtable {
         PaintTraverse = 41,
-        NumEntries = 60
+        NumEntries = 60,
     }
 
     let panel = modules.vgui2.create_interface::<Panel>(PANEL_INTERFACE)?;
@@ -79,10 +81,15 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
         
         unsafe { 
             // Copy the original Panel vtable to our vtable.
-            panel.vtable.copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len());
+            panel
+                .vtable
+                .copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len());
 
             // Hook PaintTraverse and save the original.
-            OLD_PAINT_TRAVERSE = mem::replace(&mut vtable[PanelVtable::PaintTraverse as usize], my_paint_traverse as usize);
+            OLD_PAINT_TRAVERSE = mem::replace(
+                &mut vtable[PanelVtable::PaintTraverse as usize],
+                my_paint_traverse as usize,
+            );
         }
 
         vtable
@@ -92,7 +99,10 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     // SAFETY: You must ensure that `modified_vtable` outlives `modified_vtable.as_mut_ptr()`.
     // Otherwise this mutable pointer will be a dangling reference. The easiest way to satisfy
     // this safety requirement is to not move `modified_vtable` while this patch is alive.
-    let patch = unsafe { Patch::new(&mut panel.vtable, modified_vtable.as_mut_ptr()) .ok_or(Error::NullPatch("panel vtable"))? };
+    let patch = unsafe {
+        Patch::new(&mut panel.vtable, modified_vtable.as_mut_ptr())
+            .ok_or(Error::NullPatch("panel vtable"))?
+    };
 
     {
         let _hook = Hook {
