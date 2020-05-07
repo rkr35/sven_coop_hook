@@ -59,7 +59,7 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     #[repr(usize)]
     enum PanelVtable {
         PaintTraverse = 41,
-        Max = 60
+        NumEntries = 60
     }
 
     let panel = modules.vgui2.create_interface::<Panel>(PANEL_INTERFACE)?;
@@ -72,10 +72,10 @@ fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
 
     let mut modified_vtable = {
         // Create storage for our vtable copy.
-        let mut vtable = [0; PanelVtable::Max as _];
+        let mut vtable = [0; PanelVtable::NumEntries as usize];
         
         // Copy the original Panel vtable to our vtable.
-        unsafe { panel.vtable.copy_to_nonoverlapping(vtable.as_mut_ptr(), PanelVtable::Max as _); }
+        unsafe { panel.vtable.copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len()); }
 
         // Hook PaintTraverse.
         vtable[PanelVtable::PaintTraverse as usize] = my_paint_traverse as usize;
