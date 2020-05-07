@@ -1,11 +1,14 @@
+use crate::hw;
 use crate::idle;
 use crate::memory::Patch;
 use crate::module::{Error as ModuleError, Module};
 use crate::vgui2;
 use std::mem;
+use std::ptr;
 
 use log::{error, info};
 use thiserror::Error;
+use wchar::wch_c as w;
 
 #[derive(Error, Debug)]
 pub enum Error<'a> {
@@ -39,14 +42,14 @@ impl Drop for Hook {
 }
 
 struct Modules {
-    _hw: Module,
+    hw: Module,
     vgui2: Module,
 }
 
 impl Modules {
     fn new() -> Result<Modules, ModuleError<'static>> {
         Ok(Modules {
-            _hw: Module::from("hw.dll")?,
+            hw: Module::from("hw.dll")?,
             vgui2: Module::from("vgui2.dll")?,
         })
     }
@@ -58,16 +61,29 @@ extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: &
     original(this, edx, panel, force_repaint, allow_force);
 
     if let Some(name) = this.get_name(panel) {
-        if name.to_bytes() == b"BasePanel" {
-            info!("my_paint_traverse: BasePanel");
-        }
+        let name = name.to_bytes();
+        
+        if name == b"StaticPanel" {
+
+        } else if name == b"BasePanel" {
+            unsafe {
+                let surface = &*SURFACE;
+                surface.set_text_color(0, 255, 0, 255);
+                surface.set_text_pos(3, 7);
+                let s = w!("The quick brown fox jumps over the lazy dog.");
+                surface.print_text(s);
+            }
+        } 
     }
 }
 
+static mut SURFACE: *const hw::Surface = ptr::null();
 fn hook_and_idle(modules: Modules) -> Result<(), Error<'static>> {
     let panel = modules.vgui2.create_interface::<vgui2::Panel>(vgui2::panel::INTERFACE)?;
-
     info!("panel = {:#x?}", panel as *const _);
+
+    unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
+    info!("surface = {:#x?}", unsafe { SURFACE as *const _ });
 
     if panel.vtable.is_null() {
         return Err(Error::NullVtable(vgui2::panel::INTERFACE));

@@ -19,6 +19,7 @@ use winapi::{
 };
 
 mod hook;
+mod hw;
 mod macros;
 mod memory;
 mod module;
