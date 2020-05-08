@@ -132,17 +132,35 @@ impl Module {
         interface.ok_or_else(|| Error::new(&self.name, ErrorKind::NullInterface(name)))
     }
 
-    pub fn find_string(&self, s: &str) -> Option<usize> {
+    pub fn find_bytes(&self, find_me: &[u8]) -> Option<usize> {
+        let memory = unsafe {
+            let base = self.base as *const u8;
+            std::slice::from_raw_parts(base, self.size)
+        };
+    
+        memory
+            .windows(find_me.len())
+            .find(|window| *window == find_me)
+            .map(|window| window.as_ptr() as usize)
+    }
+
+    pub fn find_string(&self, string: &str) -> Option<usize> {
+        self.find_bytes(string.as_bytes())
+    }
+
+    pub fn find_pattern(&self, pattern: &[Option<u8>]) -> Option<usize> {
         let memory = unsafe {
             let base = self.base as *const u8;
             std::slice::from_raw_parts(base, self.size)
         };
 
-        let s = s.as_bytes();
-
         memory
-            .windows(s.len())
-            .find(|window| *window == s)
+            .windows(pattern.len())
+            .find(|window|
+                pattern
+                    .iter()
+                    .zip(window.iter())
+                    .all(|(pattern_byte, module_byte)| pattern_byte.map_or(true, |p| p == *module_byte)))
             .map(|window| window.as_ptr() as usize)
     }
 }
