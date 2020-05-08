@@ -43,6 +43,9 @@ impl Hook {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
         info!("surface = {:#x?}", unsafe { SURFACE });
 
+        let screen_fade = modules.hw.find_string("ScreenFade");
+        info!("screen_fade = {:x?}", screen_fade);
+
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
         })

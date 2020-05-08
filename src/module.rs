@@ -131,4 +131,18 @@ impl Module {
             
         interface.ok_or_else(|| Error::new(&self.name, ErrorKind::NullInterface(name)))
     }
+
+    pub fn find_string(&self, s: &str) -> Option<usize> {
+        let memory = unsafe {
+            let base = self.base as *const u8;
+            std::slice::from_raw_parts(base, self.size)
+        };
+
+        let s = s.as_bytes();
+
+        memory
+            .windows(s.len())
+            .find(|window| *window == s)
+            .map(|window| window.as_ptr() as usize)
+    }
 }
