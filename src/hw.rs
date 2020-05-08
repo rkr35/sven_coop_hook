@@ -20,6 +20,12 @@ pub mod surface {
     }
 
     impl Surface {
+        /*vtable! {
+            15: pub set_text_color(r: i32, g: i32, b: i32),
+            16: pub set_text_pos(x: i32, y: i32),
+            18: print_text_impl(text: &wchar_t, len: i32),
+        }*/
+
         fn get_virtual_function_address(&self, function: Vtable) -> usize {
             unsafe { *self.vtable.add(function as usize) }
         }
