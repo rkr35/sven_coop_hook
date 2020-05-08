@@ -41,7 +41,7 @@ struct Hook {
 impl Hook {
     fn new(modules: &Modules) -> Result<Hook, Error<'static>> {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
-        info!("surface = {:#x?}", unsafe { SURFACE as *const _ });
+        info!("surface = {:#x?}", unsafe { SURFACE });
 
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
