@@ -42,7 +42,7 @@ impl Drop for Hook {
             self.vtable_patch.restore();
             
             // Only drop the modified panel vtable after we restore the original vtable;
-            // otherwise, panel will access dangling vtable pointers.
+            // otherwise, panel will access deallocated vtable entries.
             ManuallyDrop::drop(&mut self.modified_vtable);
         }
 
