@@ -63,14 +63,9 @@ impl Modules {
     }
 }
 
-fn hook_and_idle(modules: &Modules) -> Result<(), Error<'static>> {
-    let _hook = Hook::new(modules)?;
-    idle();
-    Ok(())
-}
-
 pub fn run() -> Result<(), Error<'static>> {
     let modules = Modules::new()?;
-    hook_and_idle(&modules)?;
+    let _hook = Hook::new(&modules)?;
+    idle();
     Ok(())
 }
