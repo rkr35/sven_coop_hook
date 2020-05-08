@@ -32,8 +32,8 @@ impl<'a> From<module::Error<'a>> for Error<'a> {
 }
 
 pub struct Hook {
-    modified_vtable: ManuallyDrop<Vec<usize>>,
     vtable_patch: Patch<*mut usize>,
+    modified_vtable: ManuallyDrop<Vec<usize>>,
 }
 
 impl Drop for Hook {
