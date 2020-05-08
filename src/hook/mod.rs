@@ -20,6 +20,9 @@ pub enum Error<'a> {
 
     #[error("panel hook error: {0}")]
     Panel(panel::Error<'a>),
+
+    #[error("could not find address of the string literal \"{0}\"")]
+    CouldNotFindStringLiteralAddress(&'a str),
 }
 
 impl<'a> From<module::Error<'a>> for Error<'a> {
@@ -43,8 +46,19 @@ impl Hook {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
         info!("surface = {:#x?}", unsafe { SURFACE });
 
-        let screen_fade = modules.hw.find_string("ScreenFade");
-        info!("screen_fade = {:x?}", screen_fade);
+        const SCREEN_FADE: &str = "ScreenFade";
+        let screen_fade = modules.hw.find_string(SCREEN_FADE).ok_or(Error::CouldNotFindStringLiteralAddress(SCREEN_FADE))?;
+        info!("screen_fade = {:#x}", screen_fade);
+
+        const PUSH: u8 = 0x68;
+        let mut push_screen_fade: [u8; 5] = [PUSH, 0, 0, 0, 0];
+        (&mut push_screen_fade[1..]).copy_from_slice(&screen_fade.to_le_bytes());
+
+        info!("push_screen_fade = {:x?}", push_screen_fade);
+
+        let push_screen_fade_instruction = modules.hw.find_bytes(&push_screen_fade);
+
+        info!("push_screen_fade_instruction = {:x?}", push_screen_fade_instruction);
 
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
