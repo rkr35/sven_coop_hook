@@ -111,9 +111,9 @@ impl Module {
         }
     }
 
-    pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<&'static mut T, Error<'n>> {
+    pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<*mut T, Error<'n>> {
         type CreateInterface<T> =
-            extern "C" fn(name: *const c_char, return_code: *mut i32) -> Option<&'static mut T>;
+            extern "C" fn(name: *const c_char, return_code: *mut i32) -> *mut T;
 
         let create_interface =
             unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
@@ -129,7 +129,11 @@ impl Module {
         let interface =
             create_interface(interface.as_ptr(), ptr::null_mut());
             
-        interface.ok_or_else(|| Error::new(&self.name, ErrorKind::NullInterface(name)))
+        if interface.is_null() {
+            Err(Error::new(&self.name, ErrorKind::NullInterface(name)))
+        } else {
+            Ok(interface)
+        }
     }
 
     pub fn find_bytes(&self, find_me: &[u8]) -> Option<usize> {

@@ -54,9 +54,9 @@ impl Hook {
     pub fn new(vgui2: &Module) -> Result<Hook, Error<'static>> {
         let panel = vgui2.create_interface::<vgui2::Panel>(vgui2::panel::INTERFACE)?;
 
-        info!("panel = {:#x?}", panel as *const _);
+        info!("panel = {:#x?}", panel);
     
-        if panel.vtable.is_null() {
+        if unsafe { (*panel).vtable.is_null() } {
             return Err(Error::NullVtable(vgui2::panel::INTERFACE));
         }
     
@@ -68,7 +68,7 @@ impl Hook {
             
             unsafe { 
                 // Copy the original Panel vtable to our vtable.
-                panel
+                (*panel)
                     .vtable
                     .copy_to_nonoverlapping(vtable.as_mut_ptr(), vtable.len());
     
@@ -85,7 +85,7 @@ impl Hook {
         // Replace Panel vtable with our modified vtable.
         let vtable_patch = unsafe {
             Patch::new(
-                &mut panel.vtable,
+                &mut (*panel).vtable,
                 modified_vtable.as_mut_ptr()
             )
         }.ok_or(Error::NullPatch("panel vtable"))?;
