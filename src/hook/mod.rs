@@ -50,7 +50,7 @@ struct Hook {
 impl Hook {
     fn new(modules: &Modules) -> Result<Hook, Error<'static>> {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
-        info!("surface = {:#x?}", unsafe { SURFACE });
+        info!("SURFACE = {:#x?}", unsafe { SURFACE });
 
         init_engine_and_client_funcs(&modules.hw)?;
 
@@ -131,7 +131,8 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
         let client_funcs: *const *const ClientFuncs = screen_fade.add(19).cast();
         CLIENT_FUNCS = client_funcs.read_unaligned();
 
-        info!("engine = {:?}, client = {:?}", ENGINE_FUNCS, CLIENT_FUNCS);
+        info!("ENGINE_FUNCS = {:?}", ENGINE_FUNCS);
+        info!("CLIENT_FUNCS = {:?}", CLIENT_FUNCS);
     }
 
     Ok(())
