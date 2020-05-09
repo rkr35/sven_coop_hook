@@ -91,7 +91,7 @@ pub struct EngineFuncs {
 }
 
 impl EngineFuncs {
-    }
+}
 
 #[repr(usize)]
 pub enum ClientFuncsTable {
@@ -112,6 +112,10 @@ impl ClientFuncs {
         let address = self.functions[ClientFuncsTable::CreateMove as usize];
         let function: CreateMove = unsafe { mem::transmute(address) };
         function(frame_time, cmd, active);
+    }
+
+    pub fn hook(&mut self, function: ClientFuncsTable, hooked: usize) {
+        self.functions[function as usize] = hooked;
     }
 }
 
@@ -148,6 +152,18 @@ fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>>
         .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
 }
 
+fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
+    unsafe {
+        (*ORIGINAL_CLIENT_FUNCS.as_ptr()).create_move(frame_time, cmd, active)
+    }
+
+    info!("my_create_move()");
+}
+
+unsafe fn hook_client(client_funcs: *mut ClientFuncs) {
+    (*client_funcs).hook(ClientFuncsTable::CreateMove, my_create_move as usize);
+}
+
 fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
     let screen_fade = get_screen_fade_instruction(hw)?;
 
@@ -158,11 +174,12 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
         info!("engine_funcs = {:?}", engine_funcs);
         ORIGINAL_ENGINE_FUNCS = MaybeUninit::new((*engine_funcs).clone());
 
-        let client_funcs: *const *const ClientFuncs = screen_fade.add(19).cast();
+        let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
         let client_funcs = client_funcs.read_unaligned();
         memory::ptr_check(client_funcs)?;
         info!("client_funcs = {:?}", client_funcs);
         ORIGINAL_CLIENT_FUNCS = MaybeUninit::new((*client_funcs).clone());
+        hook_client(client_funcs);
     }
 
     Ok(())
