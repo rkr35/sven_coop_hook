@@ -9,12 +9,12 @@ pub enum Error {
     NullPointer,
 
     #[error("the pointer is unaligned; \
-             the pointer needs to be offset by {num_bytes_needed_to_align_ptr} bytes \
+             the pointer needs to be offset by {num_elements_needed_to_align_ptr} elements \
              to align {address:#x} to the required alignment of {required_alignment} bytes")]
     UnalignedPointer {
         address: usize,
         required_alignment: usize,
-        num_bytes_needed_to_align_ptr: usize,
+        num_elements_needed_to_align_ptr: usize,
     },
 }
 
@@ -59,13 +59,13 @@ pub fn ptr_check<T>(p: *const T) -> Result<(), Error> {
     }
 
     let required_alignment = mem::align_of::<T>();
-    let num_bytes_needed_to_align_ptr = p.align_offset(required_alignment);
+    let num_elements_needed_to_align_ptr = p.align_offset(required_alignment);
 
-    if num_bytes_needed_to_align_ptr > 0 {
+    if num_elements_needed_to_align_ptr > 0 {
         return Err(Error::UnalignedPointer {
             address: p as usize,
             required_alignment,
-            num_bytes_needed_to_align_ptr,
+            num_elements_needed_to_align_ptr,
         });
     }
     
