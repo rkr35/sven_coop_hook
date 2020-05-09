@@ -1,15 +1,16 @@
+use crate::client::ClientFuncs;
 use crate::hw;
 use crate::idle;
 use crate::memory;
 use crate::module::{self, Module};
 
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 use std::ptr;
 
 use log::{error, info};
 use thiserror::Error;
-use ultraviolet::Vec3 as Vector;
 
+mod client;
 mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
@@ -93,48 +94,6 @@ pub struct EngineFuncs {
 impl EngineFuncs {
 }
 
-#[repr(usize)]
-pub enum ClientFuncsTable {
-    CreateMove = 15,
-    NumEntries = 43,
-}
-
-#[repr(C)]
-#[derive(Clone)]
-pub struct ClientFuncs {
-    functions: [usize; ClientFuncsTable::NumEntries as usize]
-}
-
-impl ClientFuncs {
-    // void(*CL_CreateMove) (float frametime, struct usercmd_s *cmd, int active);
-    pub fn create_move(&self, frame_time: f32, cmd: *mut UserCmd, active: i32) {
-        type CreateMove = extern "C" fn(frame_time: f32, cmd: *mut UserCmd, active: i32);
-        let address = self.functions[ClientFuncsTable::CreateMove as usize];
-        let function: CreateMove = unsafe { mem::transmute(address) };
-        function(frame_time, cmd, active);
-    }
-
-    pub fn hook(&mut self, function: ClientFuncsTable, hooked: usize) {
-        self.functions[function as usize] = hooked;
-    }
-}
-
-#[repr(C)]
-pub struct UserCmd {
-    lerp_msec: i16,
-    msec: u8,
-    view_angles: Vector,
-    forward_move: f32,
-    side_move: f32,
-    up_move: f32,
-    light_level: u8,
-    buttons: u16,
-    impulse: u8,
-    weapon_select: u8,
-    impact_index: i32,
-    impact_position: Vector,
-}
-
 fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>> {
     const SCREEN_FADE: &str = "ScreenFade";
     const PUSH: u8 = 0x68;
@@ -152,18 +111,6 @@ fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>>
         .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
 }
 
-fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
-    unsafe {
-        (*ORIGINAL_CLIENT_FUNCS.as_ptr()).create_move(frame_time, cmd, active)
-    }
-
-    info!("my_create_move()");
-}
-
-unsafe fn hook_client(client_funcs: *mut ClientFuncs) {
-    (*client_funcs).hook(ClientFuncsTable::CreateMove, my_create_move as usize);
-}
-
 fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
     let screen_fade = get_screen_fade_instruction(hw)?;
 
@@ -179,7 +126,7 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
         memory::ptr_check(client_funcs)?;
         info!("client_funcs = {:?}", client_funcs);
         ORIGINAL_CLIENT_FUNCS = MaybeUninit::new((*client_funcs).clone());
-        hook_client(client_funcs);
+        client::hook(client_funcs);
     }
 
     Ok(())
