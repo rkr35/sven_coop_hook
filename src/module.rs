@@ -1,3 +1,4 @@
+use crate::memory;
 use crate::wide_format;
 
 use std::ffi::CString;
@@ -27,8 +28,8 @@ pub enum ErrorKind<'a> {
     #[error("failed to convert the Rust string \"{0}\" to a C string because it contains an interior null byte at index {1}")]
     StrConversion(&'a str, usize),
 
-    #[error("CreateInterface returned a null pointer for the interface \"{0}\"")]
-    NullInterface(&'a str),
+    #[error("CreateInterface returned a bad pointer for the interface \"{0}\": {1}")]
+    BadInterface(&'a str, memory::Error),
 }
 
 #[derive(Error, Debug)]
@@ -128,12 +129,11 @@ impl Module {
 
         let interface =
             create_interface(interface.as_ptr(), ptr::null_mut());
-            
-        if interface.is_null() {
-            Err(Error::new(&self.name, ErrorKind::NullInterface(name)))
-        } else {
-            Ok(interface)
-        }
+        
+        memory::ptr_check(interface)
+            .map_err(|e| Error::new(&self.name, ErrorKind::BadInterface(name, e)))?;
+
+        Ok(interface)
     }
 
     pub fn find_bytes(&self, find_me: &[u8]) -> Option<usize> {
