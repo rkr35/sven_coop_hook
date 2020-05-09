@@ -28,7 +28,7 @@ pub unsafe fn hook(client_funcs: *mut ClientFuncs) {
     (*client_funcs).hook(ClientFuncsTable::CreateMove, my_create_move as usize);
 }
 
-fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
+extern "C" fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
     unsafe {
         (*ORIGINAL_CLIENT_FUNCS.as_ptr()).create_move(frame_time, cmd, active)
     }
