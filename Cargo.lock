@@ -36,6 +36,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "bytemuck"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37fa13df2292ecb479ec23aa06f4507928bef07839be9ef15281411076629431"
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -213,6 +219,7 @@ dependencies = [
  "log",
  "simplelog",
  "thiserror",
+ "ultraviolet",
  "wchar",
  "winapi",
 ]
@@ -269,6 +276,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ultraviolet"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "432f35260aff6ee992f3027a1166eaebd7c6ebc0844188b0e545f7fa2121daf7"
+dependencies = [
+ "wide",
+]
+
+[[package]]
 name = "unicode-xid"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -300,6 +316,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "wide"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5825a3b8b18b67af1c24165f8ae1feb8f691222736d14099c3483effed2ea729"
+dependencies = [
+ "bytemuck",
 ]
 
 [[package]]
