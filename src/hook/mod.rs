@@ -23,6 +23,9 @@ pub enum Error<'a> {
 
     #[error("could not find address of the string literal \"{0}\"")]
     NotFoundStringLit(&'a str),
+
+    #[error("bytes not found for {0}")]
+    NotFoundBytes(&'a str),
 }
 
 impl<'a> From<module::Error<'a>> for Error<'a> {
@@ -56,9 +59,11 @@ impl Hook {
 
         info!("push_screen_fade = {:x?}", push_screen_fade);
 
-        let push_screen_fade_instruction = modules.hw.find_bytes(&push_screen_fade);
+        let push_screen_fade_instruction = modules.hw.find_bytes(&push_screen_fade).ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?;
 
-        info!("push_screen_fade_instruction = {:x?}", push_screen_fade_instruction);
+        info!("push_screen_fade_instruction = {:#x}", push_screen_fade_instruction);
+
+
 
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
