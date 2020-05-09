@@ -22,7 +22,7 @@ pub enum Error<'a> {
     Panel(panel::Error<'a>),
 
     #[error("could not find address of the string literal \"{0}\"")]
-    CouldNotFindStringLiteralAddress(&'a str),
+    NotFoundStringLit(&'a str),
 }
 
 impl<'a> From<module::Error<'a>> for Error<'a> {
@@ -47,7 +47,7 @@ impl Hook {
         info!("surface = {:#x?}", unsafe { SURFACE });
 
         const SCREEN_FADE: &str = "ScreenFade";
-        let screen_fade = modules.hw.find_string(SCREEN_FADE).ok_or(Error::CouldNotFindStringLiteralAddress(SCREEN_FADE))?;
+        let screen_fade = modules.hw.find_string(SCREEN_FADE).ok_or(Error::NotFoundStringLit(SCREEN_FADE))?;
         info!("screen_fade = {:#x}", screen_fade);
 
         const PUSH: u8 = 0x68;
