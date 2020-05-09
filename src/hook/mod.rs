@@ -4,7 +4,6 @@ use crate::idle;
 use crate::memory;
 use crate::module::{self, Module};
 
-use std::mem::MaybeUninit;
 use std::ptr;
 
 use log::{error, info};
@@ -15,6 +14,7 @@ mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
+pub static mut ENGINE_FUNCS: *const EngineFuncs = ptr::null();
 pub static mut ORIGINAL_CLIENT_FUNCS: Option<ClientFuncs> = None;
 // END MUTABLE GLOBAL STATE
 
@@ -115,10 +115,9 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<client::Hook, Error<'stat
 
     unsafe {
         let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
-        let engine_funcs = engine_funcs.read_unaligned();
-        memory::ptr_check(engine_funcs)?;
-        info!("engine_funcs = {:?}", engine_funcs);
-        ORIGINAL_ENGINE_FUNCS = MaybeUninit::new((*engine_funcs).clone());
+        ENGINE_FUNCS = engine_funcs.read_unaligned();
+        memory::ptr_check(ENGINE_FUNCS)?;
+        info!("engine_funcs = {:?}", ENGINE_FUNCS);
 
         let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
         let client_funcs = client_funcs.read_unaligned();
