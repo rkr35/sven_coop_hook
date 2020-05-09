@@ -6,6 +6,24 @@ use log::info;
 use crate::hook::ORIGINAL_CLIENT_FUNCS;
 // END MUTABLE GLOBAL STATE
 
+pub struct Hook {
+
+}
+
+impl Hook {
+    pub unsafe fn new(client_funcs: *mut ClientFuncs) -> Self {
+        Self {
+
+        }
+    }
+}
+
+impl Drop for Hook {
+    fn drop(&mut self) {
+
+    }
+}
+
 pub unsafe fn hook(client_funcs: *mut ClientFuncs) {
     (*client_funcs).hook(ClientFuncsTable::CreateMove, my_create_move as usize);
 }

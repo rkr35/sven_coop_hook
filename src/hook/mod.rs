@@ -50,6 +50,7 @@ impl<'a> From<panel::Error<'a>> for Error<'a> {
 }
 
 struct Hook {
+    _client: client::Hook,
     _panel: panel::Hook,
 }
 
@@ -58,10 +59,9 @@ impl Hook {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
         info!("SURFACE = {:?}", unsafe { SURFACE });
 
-        init_engine_and_client_funcs(&modules.hw)?;
-
         Ok(Hook {
-            _panel: panel::Hook::new(&modules.vgui2)?
+            _client: init_engine_and_client_funcs(&modules.hw)?,
+            _panel: panel::Hook::new(&modules.vgui2)?,
         })
     }
 }
@@ -111,7 +111,7 @@ fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>>
         .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
 }
 
-fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
+fn init_engine_and_client_funcs(hw: &Module) -> Result<client::Hook, Error<'static>> {
     let screen_fade = get_screen_fade_instruction(hw)?;
 
     unsafe {
@@ -126,10 +126,9 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
         memory::ptr_check(client_funcs)?;
         info!("client_funcs = {:?}", client_funcs);
         ORIGINAL_CLIENT_FUNCS = MaybeUninit::new((*client_funcs).clone());
-        client::hook(client_funcs);
-    }
 
-    Ok(())
+        Ok(client::Hook::new(client_funcs))
+    }
 }
 
 pub fn run() -> Result<(), Error<'static>> {
