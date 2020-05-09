@@ -4,7 +4,7 @@ use ultraviolet::Vec3 as Vector;
 
 #[repr(usize)]
 pub enum ClientFuncsTable {
-    CreateMove = 15,
+    CreateMove = 14,
     NumEntries = 43,
 }
 
