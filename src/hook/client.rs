@@ -25,7 +25,7 @@ impl Hook {
 impl Drop for Hook {
     fn drop(&mut self) {
         unsafe {
-            *(self.client_funcs) = (*ORIGINAL_CLIENT_FUNCS.as_ptr()).clone()
+            *self.client_funcs = (*ORIGINAL_CLIENT_FUNCS.as_ptr()).clone()
         }
 
         info!("Client hook dropped.");
