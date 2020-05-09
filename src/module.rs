@@ -136,7 +136,7 @@ impl Module {
         Ok(interface)
     }
 
-    pub fn find_bytes(&self, find_me: &[u8]) -> Option<usize> {
+    pub fn find_bytes(&self, find_me: &[u8]) -> Option<*const u8> {
         let memory = unsafe {
             let base = self.base as *const u8;
             std::slice::from_raw_parts(base, self.size)
@@ -145,10 +145,10 @@ impl Module {
         memory
             .windows(find_me.len())
             .find(|window| *window == find_me)
-            .map(|window| window.as_ptr() as usize)
+            .map(|window| window.as_ptr())
     }
 
-    pub fn find_string(&self, string: &str) -> Option<usize> {
+    pub fn find_string(&self, string: &str) -> Option<*const u8> {
         self.find_bytes(string.as_bytes())
     }
 

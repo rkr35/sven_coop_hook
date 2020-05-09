@@ -51,11 +51,11 @@ impl Hook {
 
         const SCREEN_FADE: &str = "ScreenFade";
         let screen_fade = modules.hw.find_string(SCREEN_FADE).ok_or(Error::NotFoundStringLit(SCREEN_FADE))?;
-        info!("screen_fade = {:#x}", screen_fade);
+        info!("screen_fade = {:#x?}", screen_fade);
 
         const PUSH: u8 = 0x68;
         let mut push_screen_fade: [u8; 5] = [PUSH, 0, 0, 0, 0];
-        (&mut push_screen_fade[1..]).copy_from_slice(&screen_fade.to_le_bytes());
+        (&mut push_screen_fade[1..]).copy_from_slice(&(screen_fade as usize).to_le_bytes());
 
         info!("push_screen_fade = {:x?}", push_screen_fade);
 
@@ -64,7 +64,7 @@ impl Hook {
             .find_bytes(&push_screen_fade)
             .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?;
 
-        info!("push_screen_fade_instruction = {:#x}", push_screen_fade_instruction);
+        info!("push_screen_fade_instruction = {:#x?}", push_screen_fade_instruction);
 
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
