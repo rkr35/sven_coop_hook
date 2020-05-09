@@ -152,7 +152,7 @@ impl Module {
         self.find_bytes(string.as_bytes())
     }
 
-    pub fn find_pattern(&self, pattern: &[Option<u8>]) -> Option<usize> {
+    pub fn _find_pattern(&self, pattern: &[Option<u8>]) -> Option<usize> {
         let memory = unsafe {
             let base = self.base as *const u8;
             std::slice::from_raw_parts(base, self.size)
