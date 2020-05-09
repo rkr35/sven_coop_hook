@@ -15,8 +15,7 @@ mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
-pub static mut ORIGINAL_ENGINE_FUNCS: MaybeUninit<EngineFuncs> = MaybeUninit::uninit();
-pub static mut ORIGINAL_CLIENT_FUNCS: MaybeUninit<ClientFuncs> = MaybeUninit::uninit();
+pub static mut ORIGINAL_CLIENT_FUNCS: Option<ClientFuncs> = None;
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -125,7 +124,7 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<client::Hook, Error<'stat
         let client_funcs = client_funcs.read_unaligned();
         memory::ptr_check(client_funcs)?;
         info!("client_funcs = {:?}", client_funcs);
-        ORIGINAL_CLIENT_FUNCS = MaybeUninit::new((*client_funcs).clone());
+        ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
 
         Ok(client::Hook::new(client_funcs))
     }

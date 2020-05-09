@@ -25,7 +25,7 @@ impl Hook {
 impl Drop for Hook {
     fn drop(&mut self) {
         unsafe {
-            *self.client_funcs = (*ORIGINAL_CLIENT_FUNCS.as_ptr()).clone()
+            *self.client_funcs = ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().clone();
         }
 
         info!("Client hook dropped.");
@@ -34,7 +34,7 @@ impl Drop for Hook {
 
 extern "C" fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
     unsafe {
-        (*ORIGINAL_CLIENT_FUNCS.as_ptr()).create_move(frame_time, cmd, active)
+        ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().create_move(frame_time, cmd, active)
     }
 
     info!("fps = {}", 1.0 / frame_time);
