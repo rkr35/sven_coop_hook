@@ -2,6 +2,7 @@ use crate::hw;
 use crate::idle;
 use crate::module::{self, Module};
 
+use std::mem;
 use std::ptr;
 
 use log::{error, info};
@@ -11,6 +12,8 @@ mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
+pub static mut ENGINE_FUNCS: *const EngineFuncs = ptr::null();
+pub static mut CLIENT_FUNCS: *const ClientFuncs = ptr::null();
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -66,6 +69,18 @@ impl Hook {
 
         info!("push_screen_fade_instruction = {:#x?}", push_screen_fade_instruction);
 
+        unsafe {
+            let engine_funcs: *const *const EngineFuncs = push_screen_fade_instruction.add(13).cast();
+            ENGINE_FUNCS = engine_funcs.read_unaligned();
+
+            info!("{}", (*ENGINE_FUNCS).get_window_center_x());
+
+            let client_funcs: *const *const ClientFuncs = push_screen_fade_instruction.add(19).cast();
+            CLIENT_FUNCS = client_funcs.read_unaligned();
+
+            info!("engine = {:?}, client = {:?}", ENGINE_FUNCS, CLIENT_FUNCS);
+        }
+
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
         })
@@ -84,6 +99,36 @@ impl Modules {
             vgui2: Module::from("vgui2.dll")?,
         })
     }
+}
+
+#[repr(usize)]
+pub enum EngineFuncsTable {
+    GetWindowCenterX = 33,
+    NumEntries = 131,
+}
+
+#[repr(C)]
+pub struct EngineFuncs {
+    functions: [usize; EngineFuncsTable::NumEntries as usize]
+}
+
+impl EngineFuncs {
+    pub fn get_window_center_x(&self) -> i32 {
+        type GetWindowCenterX = extern "C" fn() -> i32;
+        let address = self.functions[EngineFuncsTable::GetWindowCenterX as usize];
+        let function: GetWindowCenterX = unsafe { mem::transmute(address) };
+        function()
+    }
+}
+
+#[repr(usize)]
+pub enum ClientFuncsTable {
+    NumEntries = 43,
+}
+
+#[repr(C)]
+pub struct ClientFuncs {
+    functions: [usize; ClientFuncsTable::NumEntries as usize]
 }
 
 pub fn run() -> Result<(), Error<'static>> {
