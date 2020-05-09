@@ -54,7 +54,7 @@ struct Hook {
 impl Hook {
     fn new(modules: &Modules) -> Result<Hook, Error<'static>> {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
-        info!("SURFACE = {:#x?}", unsafe { SURFACE });
+        info!("SURFACE = {:?}", unsafe { SURFACE });
 
         init_engine_and_client_funcs(&modules.hw)?;
 
