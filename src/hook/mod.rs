@@ -1,8 +1,9 @@
 use crate::hw;
 use crate::idle;
+use crate::memory;
 use crate::module::{self, Module};
 
-use std::mem;
+use std::mem::{self, MaybeUninit};
 use std::ptr;
 
 use log::{error, info};
@@ -12,8 +13,8 @@ mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
-pub static mut ENGINE_FUNCS: *const EngineFuncs = ptr::null();
-pub static mut CLIENT_FUNCS: *const ClientFuncs = ptr::null();
+pub static mut ORIGINAL_ENGINE_FUNCS: MaybeUninit<EngineFuncs> = MaybeUninit::uninit();
+pub static mut ORIGINAL_CLIENT_FUNCS: MaybeUninit<ClientFuncs> = MaybeUninit::uninit();
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -29,6 +30,9 @@ pub enum Error<'a> {
 
     #[error("bytes not found for {0}")]
     NotFoundBytes(&'a str),
+
+    #[error("patch error: {0}")]
+    Patch(#[from] memory::Error),
 }
 
 impl<'a> From<module::Error<'a>> for Error<'a> {
@@ -81,6 +85,7 @@ pub enum EngineFuncsTable {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct EngineFuncs {
     functions: [usize; EngineFuncsTable::NumEntries as usize]
 }
@@ -100,6 +105,7 @@ pub enum ClientFuncsTable {
 }
 
 #[repr(C)]
+#[derive(Clone)]
 pub struct ClientFuncs {
     functions: [usize; ClientFuncsTable::NumEntries as usize]
 }
@@ -126,13 +132,16 @@ fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
 
     unsafe {
         let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
-        ENGINE_FUNCS = engine_funcs.read_unaligned();
+        let engine_funcs = engine_funcs.read_unaligned();
+        memory::ptr_check(engine_funcs)?;
+        info!("engine_funcs = {:?}", engine_funcs);
+        ORIGINAL_ENGINE_FUNCS = MaybeUninit::new((*engine_funcs).clone());
 
         let client_funcs: *const *const ClientFuncs = screen_fade.add(19).cast();
-        CLIENT_FUNCS = client_funcs.read_unaligned();
-
-        info!("ENGINE_FUNCS = {:?}", ENGINE_FUNCS);
-        info!("CLIENT_FUNCS = {:?}", CLIENT_FUNCS);
+        let client_funcs = client_funcs.read_unaligned();
+        memory::ptr_check(client_funcs)?;
+        info!("client_funcs = {:?}", client_funcs);
+        ORIGINAL_CLIENT_FUNCS = MaybeUninit::new((*client_funcs).clone());
     }
 
     Ok(())
