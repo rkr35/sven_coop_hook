@@ -40,7 +40,7 @@ impl<T> Patch<T> where T: Copy + Clone {
         // Save the previous value at this address.
         old_value = *pointer;
 
-        // Change page protection and write new value.
+        // Briefly change page protection to write new value.
         VirtualProtect(pointer.cast(), mem::size_of::<T>(), PAGE_EXECUTE_READWRITE, &mut old_protection);
         *pointer = new_value;
         VirtualProtect(pointer.cast(), mem::size_of::<T>(), old_protection, &mut old_protection);
