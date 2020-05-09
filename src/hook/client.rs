@@ -1,4 +1,4 @@
-use crate::client::{ClientFuncs, ClientFuncsTable, UserCmd};
+use crate::game::client::{ClientFuncs, ClientFuncsTable, UserCmd};
 
 use log::info;
 

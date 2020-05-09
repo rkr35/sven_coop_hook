@@ -18,13 +18,11 @@ use winapi::{
     },
 };
 
-mod client;
+mod game;
 mod hook;
-mod hw;
 mod macros;
 mod memory;
 mod module;
-mod vgui2;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
     unsafe {

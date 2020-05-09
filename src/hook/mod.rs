@@ -1,5 +1,5 @@
-use crate::client::ClientFuncs;
-use crate::hw;
+use crate::game::client::ClientFuncs;
+use crate::game::hw;
 use crate::idle;
 use crate::memory;
 use crate::module::{self, Module};

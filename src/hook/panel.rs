@@ -1,6 +1,6 @@
 use crate::memory::{self, Patch};
 use crate::module::{self, Module};
-use crate::vgui2;
+use crate::game::vgui2;
 
 use std::mem::{self, ManuallyDrop};
 
