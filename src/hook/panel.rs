@@ -1,4 +1,4 @@
-use crate::memory::Patch;
+use crate::memory::{self, Patch};
 use crate::module::{self, Module};
 use crate::vgui2;
 
@@ -21,8 +21,8 @@ pub enum Error<'a> {
     #[error("interface \"{0}\" has a null vtable")]
     NullVtable(&'a str),
 
-    #[error("tried to patch a null pointer for {0}")]
-    NullPatch(&'a str),
+    #[error("patch error: {0}")]
+    Patch(#[from] memory::Error),
 }
 
 impl<'a> From<module::Error<'a>> for Error<'a> {
@@ -88,7 +88,7 @@ impl Hook {
                 &mut (*panel).vtable,
                 modified_vtable.as_mut_ptr()
             )
-        }.ok_or(Error::NullPatch("panel vtable"))?;
+        }?;
 
         Ok(Hook {
             modified_vtable,
