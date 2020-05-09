@@ -80,7 +80,6 @@ impl Modules {
 
 #[repr(usize)]
 pub enum EngineFuncsTable {
-    GetWindowCenterX = 33,
     NumEntries = 131,
 }
 
@@ -91,13 +90,7 @@ pub struct EngineFuncs {
 }
 
 impl EngineFuncs {
-    pub fn get_window_center_x(&self) -> i32 {
-        type GetWindowCenterX = extern "C" fn() -> i32;
-        let address = self.functions[EngineFuncsTable::GetWindowCenterX as usize];
-        let function: GetWindowCenterX = unsafe { mem::transmute(address) };
-        function()
     }
-}
 
 #[repr(usize)]
 pub enum ClientFuncsTable {
