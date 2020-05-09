@@ -52,34 +52,7 @@ impl Hook {
         unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
         info!("surface = {:#x?}", unsafe { SURFACE });
 
-        const SCREEN_FADE: &str = "ScreenFade";
-        let screen_fade = modules.hw.find_string(SCREEN_FADE).ok_or(Error::NotFoundStringLit(SCREEN_FADE))?;
-        info!("screen_fade = {:#x?}", screen_fade);
-
-        const PUSH: u8 = 0x68;
-        let mut push_screen_fade: [u8; 5] = [PUSH, 0, 0, 0, 0];
-        (&mut push_screen_fade[1..]).copy_from_slice(&(screen_fade as usize).to_le_bytes());
-
-        info!("push_screen_fade = {:x?}", push_screen_fade);
-
-        let push_screen_fade_instruction = modules
-            .hw
-            .find_bytes(&push_screen_fade)
-            .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?;
-
-        info!("push_screen_fade_instruction = {:#x?}", push_screen_fade_instruction);
-
-        unsafe {
-            let engine_funcs: *const *const EngineFuncs = push_screen_fade_instruction.add(13).cast();
-            ENGINE_FUNCS = engine_funcs.read_unaligned();
-
-            info!("{}", (*ENGINE_FUNCS).get_window_center_x());
-
-            let client_funcs: *const *const ClientFuncs = push_screen_fade_instruction.add(19).cast();
-            CLIENT_FUNCS = client_funcs.read_unaligned();
-
-            info!("engine = {:?}, client = {:?}", ENGINE_FUNCS, CLIENT_FUNCS);
-        }
+        init_engine_and_client_funcs(&modules.hw)?;
 
         Ok(Hook {
             _panel: panel::Hook::new(&modules.vgui2)?
@@ -129,6 +102,39 @@ pub enum ClientFuncsTable {
 #[repr(C)]
 pub struct ClientFuncs {
     functions: [usize; ClientFuncsTable::NumEntries as usize]
+}
+
+fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>> {
+    const SCREEN_FADE: &str = "ScreenFade";
+    const PUSH: u8 = 0x68;
+
+    let screen_fade = hw
+        .find_string(SCREEN_FADE)
+        .ok_or(Error::NotFoundStringLit(SCREEN_FADE))?;
+
+    let mut push_screen_fade: [u8; 5] = [PUSH, 0, 0, 0, 0];
+    (&mut push_screen_fade[1..])
+        .copy_from_slice(&(screen_fade as usize).to_le_bytes());
+
+    Ok(hw
+        .find_bytes(&push_screen_fade)
+        .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
+}
+
+fn init_engine_and_client_funcs(hw: &Module) -> Result<(), Error<'static>> {
+    let screen_fade = get_screen_fade_instruction(hw)?;
+
+    unsafe {
+        let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
+        ENGINE_FUNCS = engine_funcs.read_unaligned();
+
+        let client_funcs: *const *const ClientFuncs = screen_fade.add(19).cast();
+        CLIENT_FUNCS = client_funcs.read_unaligned();
+
+        info!("engine = {:?}, client = {:?}", ENGINE_FUNCS, CLIENT_FUNCS);
+    }
+
+    Ok(())
 }
 
 pub fn run() -> Result<(), Error<'static>> {
