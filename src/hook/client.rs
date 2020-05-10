@@ -7,7 +7,6 @@ use ultraviolet::Vec3 as Vector;
 // BEGIN MUTABLE GLOBAL STATE
 use crate::hook::ORIGINAL_CLIENT_FUNCS;
 use crate::hook::PLAYER_MOVE;
-static mut RECOIL_ANGLE: Vector = Vector { x: 0.0, y: 0.0, z: 0.0 };
 // END MUTABLE GLOBAL STATE
 
 pub struct Hook {
@@ -62,7 +61,6 @@ unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: 
     }
 
     bunny_hop(cmd);
-    (*cmd).view_angles = Vector::zero();
 }
 
 // void(*V_CalcRefdef) (struct ref_params_s *pparams);
