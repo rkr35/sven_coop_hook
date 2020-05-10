@@ -1,3 +1,4 @@
+		virtual			~IBaseInterface() {}
     	virtual void Shutdown( void ) = 0;
 		virtual void RunFrame( void ) = 0;
 		virtual IPanel* GetEmbeddedPanel( void ) = 0;
