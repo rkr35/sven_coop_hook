@@ -1,10 +1,12 @@
 use std::mem;
+use std::os::raw::c_char;
 
 use ultraviolet::Vec3 as Vector;
 
 #[repr(usize)]
 pub enum ClientFuncsTable {
     CreateMove = 14,
+    CalcRefDef = 19,
     NumEntries = 43,
 }
 
@@ -21,6 +23,14 @@ impl ClientFuncs {
         let address = self.functions[ClientFuncsTable::CreateMove as usize];
         let function: CreateMove = unsafe { mem::transmute(address) };
         function(frame_time, cmd, active);
+    }
+
+    // void(*V_CalcRefdef) (struct ref_params_s *pparams);
+    pub fn calc_ref_def(&self, params: *mut RefParams) {
+        type CalcRefDef = extern "C" fn(params: *mut RefParams);
+        let address = self.functions[ClientFuncsTable::CalcRefDef as usize];
+        let function: CalcRefDef = unsafe { mem::transmute(address) };
+        function(params);
     }
 
     pub fn hook(&mut self, function: ClientFuncsTable, hooked: usize) {
@@ -84,4 +94,71 @@ pub struct PlayerMove {
     move_type: i32,
     on_ground: i32,
     pub water_level: i32,
+}
+
+#[repr(C)]
+pub struct MoveVars {
+    gravity: f32,           // Gravity for map
+    stop_speed: f32,         // Deceleration when not moving
+    max_speed: f32,          // Max allowed speed
+    spectator_maxspeed: f32,
+    accelerate: f32,        // Acceleration factor
+    air_accelerate: f32,     // Same for when in open air
+    water_accelerate: f32,   // Same for when in water
+    friction: f32,          
+    edge_friction: f32,	   // Extra friction near dropofs 
+    water_friction: f32,     // Less in water
+    ent_gravity: f32,        // 1.0
+    bounce: f32,            // Wall bounce value. 1.0
+    step_size: f32,          // sv_stepsize;
+    max_velocity: f32,       // maximum server velocity.
+    z_max: f32,			   // Max z-buffer range (for GL)
+    wave_height: f32,		   // Water wave height (for GL)
+    footsteps: Qboolean,        // Play footstep sounds
+    sky_name: [c_char; 32],	   // Name of the sky map
+    roll_angle: f32,
+    roll_speed: f32,
+    sky_color_r: f32,			// Sky color
+    sky_color_g: f32,			// 
+    sky_color_b: f32,			//
+    sky_vec_x: f32,			// Sky vector
+    sky_vec_y: f32,			// 
+    sky_vec_z: f32,			// 
+}
+
+#[repr(C)]
+pub struct RefParams {
+    view_org: [f32; 3],
+    pub view_angles: [f32; 3],
+    forward: [f32; 3],
+    right: [f32; 3],
+    up: [f32; 3],
+    frame_time: f32,
+    time: f32,
+    intermission: i32,
+    paused: i32,
+    spectator: i32,
+    on_ground: i32,
+    water_level: i32,
+    sim_vel: [f32; 3],
+    sim_org: [f32; 3],
+    view_height: [f32; 3],
+    ideal_pitch: f32,
+    cl_view_angles: [f32; 3],
+    health: i32,
+    crosshair_angle: [f32; 3],
+    view_size: f32,
+    punch_angle: [f32; 3],
+    max_clients: i32,
+    view_entity: i32,
+    player_num: i32,
+    max_entities: i32,
+    demo_playback: i32,
+    hardware: i32,
+    smoothing: i32,
+    cmd: *const UserCmd,
+    move_vars: *const MoveVars,
+    viewport: [i32; 4],
+    next_view: i32,
+    only_client_draw: i32,
 }

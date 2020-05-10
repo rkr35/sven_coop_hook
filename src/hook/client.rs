@@ -1,4 +1,4 @@
-use crate::game::client::{ClientFuncs, ClientFuncsTable, UserCmd};
+use crate::game::client::{ClientFuncs, ClientFuncsTable, RefParams, UserCmd};
 use crate::memory;
 
 use log::info;
@@ -16,6 +16,7 @@ impl Hook {
     pub fn new(client_funcs: *mut ClientFuncs) -> Self {
         unsafe {
             (*client_funcs).hook(ClientFuncsTable::CreateMove, my_create_move as usize);
+            (*client_funcs).hook(ClientFuncsTable::CalcRefDef, my_calc_ref_def as usize);
         }
 
         Self {
@@ -57,10 +58,26 @@ fn bunny_hop(cmd: *mut UserCmd) {
     }
 }
 
+fn no_recoil(cmd: *mut UserCmd) {
+
+}
+
 extern "C" fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
     unsafe {
-        ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().create_move(frame_time, cmd, active)
+        ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().create_move(frame_time, cmd, active);
     }
 
     bunny_hop(cmd);
+    no_recoil(cmd);
+}
+
+// void(*V_CalcRefdef) (struct ref_params_s *pparams);
+extern "C" fn my_calc_ref_def(params: *mut RefParams) {
+    unsafe {
+        ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().calc_ref_def(params);
+    }
+
+    if memory::ptr_check(params).is_ok() {
+        info!("view_angles = {:?}", unsafe { (*params).view_angles });
+    }
 }
