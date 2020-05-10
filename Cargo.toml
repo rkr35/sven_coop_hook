@@ -20,6 +20,7 @@ debug = true
 [dependencies]
 log = "0.4"
 simplelog = "0.7"
+sven_coop_hook_macros = { path = "macros" }
 thiserror = "1.0"
 ultraviolet = "0.4"
 wchar = "0.6"

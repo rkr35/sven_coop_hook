@@ -218,10 +218,20 @@ version = "0.1.0"
 dependencies = [
  "log",
  "simplelog",
+ "sven_coop_hook_macros",
  "thiserror",
  "ultraviolet",
  "wchar",
  "winapi",
+]
+
+[[package]]
+name = "sven_coop_hook_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
