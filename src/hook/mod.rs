@@ -65,7 +65,7 @@ impl Hook {
             let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
             ENGINE_FUNCS = engine_funcs.read_unaligned();
             memory::ptr_check(ENGINE_FUNCS)?;
-            info!("engine_funcs = {:?}", ENGINE_FUNCS);
+            info!("ENGINE_FUNCS = {:?}", ENGINE_FUNCS);
     
             let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
             let client_funcs = client_funcs.read_unaligned();
@@ -76,7 +76,7 @@ impl Hook {
             let player_move: *const *const PlayerMove = screen_fade.add(36).cast();
             PLAYER_MOVE = player_move.read_unaligned();
             memory::ptr_check(PLAYER_MOVE)?;
-            info!("player_move = {:?}", PLAYER_MOVE);
+            info!("PLAYER_MOVE = {:?}", PLAYER_MOVE);
     
             client::Hook::new(client_funcs)
         };
