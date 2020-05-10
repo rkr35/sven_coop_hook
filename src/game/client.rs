@@ -317,7 +317,7 @@ pub const HISTORY_MAX: usize = 64;
 #[repr(C)]
 pub struct Entity {
     index: i32,
-    player: Qboolean,
+    pub player: Qboolean,
     base_line: EntityState,
     prev_state: EntityState,
     cur_state: EntityState,
