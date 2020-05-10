@@ -146,8 +146,6 @@ pub fn functions(input: OldTokenStream) -> OldTokenStream {
         .map(ToTokens::into_token_stream)
         .collect();
 
-    println!("FUNCTIONS {}", generated);
-
     generated.into()
 }
 
@@ -159,8 +157,6 @@ pub fn vtable(input: OldTokenStream) -> OldTokenStream {
         .into_iter()
         .map(ToTokens::into_token_stream)
         .collect();
-
-    println!("VTABLE {}", generated);
 
     generated.into()
 }
