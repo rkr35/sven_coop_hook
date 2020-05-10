@@ -15,6 +15,12 @@ pub struct EngineFuncs {
 }
 
 impl EngineFuncs {
+    // functions! {
+    //     36: get_max_clients() -> i32,
+    //     51: get_local_player() -> *const Entity,
+
+    // }
+
     // struct cl_entity_s			*( *GetLocalPlayer )		( void );
     pub fn get_local_player(&self) -> *const Entity {
         type GetLocalPlayer = extern "C" fn() -> *const Entity;
