@@ -43,3 +43,8 @@ pub struct UserCmd {
     impact_index: i32,
     impact_position: Vector,
 }
+
+#[repr(C)]
+pub struct PlayerMove {
+    
+}

@@ -1,4 +1,4 @@
-use crate::game::client::ClientFuncs;
+use crate::game::client::{ClientFuncs, PlayerMove};
 use crate::game::hw;
 use crate::idle;
 use crate::memory;
@@ -16,6 +16,7 @@ mod panel;
 pub static mut SURFACE: *const hw::Surface = ptr::null();
 pub static mut ENGINE_FUNCS: *const EngineFuncs = ptr::null();
 pub static mut ORIGINAL_CLIENT_FUNCS: Option<ClientFuncs> = None;
+pub static mut PLAYER_MOVE: *const PlayerMove = ptr::null();
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -55,11 +56,33 @@ struct Hook {
 
 impl Hook {
     fn new(modules: &Modules) -> Result<Hook, Error<'static>> {
-        unsafe { SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?; }
-        info!("SURFACE = {:?}", unsafe { SURFACE });
+        let screen_fade = get_screen_fade_instruction(&modules.hw)?;
+
+        let _client = unsafe {
+            SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?;
+            info!("SURFACE = {:?}", SURFACE);
+
+            let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
+            ENGINE_FUNCS = engine_funcs.read_unaligned();
+            memory::ptr_check(ENGINE_FUNCS)?;
+            info!("engine_funcs = {:?}", ENGINE_FUNCS);
+    
+            let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
+            let client_funcs = client_funcs.read_unaligned();
+            memory::ptr_check(client_funcs)?;
+            info!("client_funcs = {:?}", client_funcs);
+            ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
+    
+            let player_move: *const *const PlayerMove = screen_fade.add(36).cast();
+            PLAYER_MOVE = player_move.read_unaligned();
+            memory::ptr_check(PLAYER_MOVE)?;
+            info!("player_move = {:?}", PLAYER_MOVE);
+    
+            client::Hook::new(client_funcs)
+        };
 
         Ok(Hook {
-            _client: init_engine_and_client_funcs(&modules.hw)?,
+            _client,
             _panel: panel::Hook::new(&modules.vgui2)?,
         })
     }
@@ -108,25 +131,6 @@ fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>>
     Ok(hw
         .find_bytes(&push_screen_fade)
         .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
-}
-
-fn init_engine_and_client_funcs(hw: &Module) -> Result<client::Hook, Error<'static>> {
-    let screen_fade = get_screen_fade_instruction(hw)?;
-
-    unsafe {
-        let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
-        ENGINE_FUNCS = engine_funcs.read_unaligned();
-        memory::ptr_check(ENGINE_FUNCS)?;
-        info!("engine_funcs = {:?}", ENGINE_FUNCS);
-
-        let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
-        let client_funcs = client_funcs.read_unaligned();
-        memory::ptr_check(client_funcs)?;
-        info!("client_funcs = {:?}", client_funcs);
-        ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
-
-        Ok(client::Hook::new(client_funcs))
-    }
 }
 
 pub fn run() -> Result<(), Error<'static>> {
