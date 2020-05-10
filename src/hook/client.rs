@@ -36,6 +36,4 @@ extern "C" fn my_create_move(frame_time: f32, cmd: *mut UserCmd, active: i32) {
     unsafe {
         ORIGINAL_CLIENT_FUNCS.as_ref().unwrap().create_move(frame_time, cmd, active)
     }
-
-    info!("fps = {}", 1.0 / frame_time);
 }
