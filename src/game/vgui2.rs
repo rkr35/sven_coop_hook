@@ -4,7 +4,6 @@ pub mod panel {
     use sven_coop_hook_macros::vtable;
 
     use std::ffi::CStr;
-    use std::mem;
     use std::os::raw::c_char;
 
     pub const INTERFACE: &str = "VGUI_Panel007";

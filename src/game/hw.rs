@@ -3,8 +3,6 @@ pub use surface::Surface;
 pub mod surface {
     use sven_coop_hook_macros::vtable;
     
-    use std::mem;
-
     use winapi::ctypes::wchar_t;
 
     pub const INTERFACE: &str = "VGUI_Surface026";
