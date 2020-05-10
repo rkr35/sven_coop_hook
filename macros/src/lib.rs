@@ -2,19 +2,20 @@ use proc_macro::TokenStream as OldTokenStream;
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Ident, LitInt, parenthesized, parse_macro_input, Token, Type};
+use syn::{Ident, LitInt, parenthesized, parse_macro_input, Token, Type, Visibility};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 
 struct Function {
     index: LitInt,
+    visibility: Visibility,
     name: Ident,
     return_type: Type,
 }
 
 impl Parse for Function {
     fn parse(input: ParseStream) -> Result<Self> {
-        // 51: get_local_player() -> *const Entity
+        // 51: pub get_local_player() -> *const Entity
 
         // 51
         let index = input.parse()?;
@@ -22,6 +23,9 @@ impl Parse for Function {
         // :
         input.parse::<Token![:]>()?;
         
+        // pub
+        let visibility = input.parse()?;
+
         // get_local_player
         let name = input.parse()?;
         
@@ -37,6 +41,7 @@ impl Parse for Function {
 
         Ok(Self {
             index,
+            visibility,
             name,
             return_type,
         })
@@ -45,10 +50,10 @@ impl Parse for Function {
 
 impl ToTokens for Function {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Function { index, name, return_type } = &self;
+        let Function { index, visibility, name, return_type } = &self;
 
         *tokens = quote! {
-            pub fn #name(&self) -> #return_type {
+            #visibility fn #name(&self) -> #return_type {
                 type Function = extern "C" fn() -> #return_type;
                 let address = self.functions[#index];
                 let function = unsafe { core::mem::transmute::<usize, Function>(address) };
