@@ -107,7 +107,7 @@ extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: &
         if name == b"StaticPanel" {
 
         } else if name == b"BasePanel" {
-            let surface = unsafe { &*SURFACE };
+            let surface = unsafe { &*SURFACE }; // TODO: Casting a raw pointer to a reference is immediate UB if the reference aliases?
             surface.set_text_color(0, 255, 0, 255);
             surface.set_text_pos(3, 7);
             let s = w!("The quick brown fox jumps over the lazy dog.");
