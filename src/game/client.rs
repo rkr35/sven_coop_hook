@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::mem;
 use std::os::raw::c_char;
 
@@ -105,8 +107,8 @@ pub struct MoveVars {
     accelerate: f32,        // Acceleration factor
     air_accelerate: f32,     // Same for when in open air
     water_accelerate: f32,   // Same for when in water
-    friction: f32,          
-    edge_friction: f32,	   // Extra friction near dropofs 
+    friction: f32,
+    edge_friction: f32,	   // Extra friction near dropofs
     water_friction: f32,     // Less in water
     ent_gravity: f32,        // 1.0
     bounce: f32,            // Wall bounce value. 1.0
@@ -119,11 +121,11 @@ pub struct MoveVars {
     roll_angle: f32,
     roll_speed: f32,
     sky_color_r: f32,			// Sky color
-    sky_color_g: f32,			// 
+    sky_color_g: f32,			//
     sky_color_b: f32,			//
     sky_vec_x: f32,			// Sky vector
-    sky_vec_y: f32,			// 
-    sky_vec_z: f32,			// 
+    sky_vec_y: f32,			//
+    sky_vec_z: f32,			//
 }
 
 #[repr(C)]
@@ -161,4 +163,177 @@ pub struct RefParams {
     viewport: [i32; 4],
     next_view: i32,
     only_client_draw: i32,
+}
+
+
+#[repr(C)]
+pub struct EntityState {
+    entity_type: i32,
+    number: i32,
+    msg_time: f32,
+    message_num: i32,
+    origin: Vector,
+    angles: Vector,
+    model_index: i32,
+    sequence: i32,
+    frame: f32,
+    color_map: i32,
+    skin: u16,
+    solid: u16,
+    effects: i32,
+    scale: f32,
+    eflags: u8,
+    render_mode: i32,
+    render_amt: i32,
+    render_color: [u8; 3],
+    render_fx: i32,
+    move_type: i32,
+    anim_time: f32,
+    frame_rate: f32,
+    body: i32,
+    controller: [u8; 4],
+    blending: [u8; 4],
+    velocity: Vector,
+    mins: Vector,
+    maxs: Vector,
+    aim_ent: i32,
+    owner: i32,
+    friction: f32,
+    gravity: f32,
+    team: i32,
+    player_class: i32,
+    health: i32,
+    spectator: Qboolean,
+    weapon_model: i32,
+    gait_sequence: i32,
+    base_velocity: Vector,
+    use_hull: i32,
+    old_buttons: i32,
+    on_ground: i32,
+    step_left: i32,
+    fall_velocity: f32,
+    fov: f32,
+    weapon_anim: i32,
+    start_pos: Vector,
+    end_pos: Vector,
+    impact_time: f32,
+    start_time: f32,
+    iuser1: i32,
+    iuser2: i32,
+    iuser3: i32,
+    iuser4: i32,
+    fuser1: f32,
+    fuser2: f32,
+    fuser3: f32,
+    fuser4: f32,
+    vuser1: Vector,
+    vuser2: Vector,
+    vuser3: Vector,
+    vuser4: Vector,
+}
+
+#[repr(C)]
+pub struct PositionHistory {
+    anim_time: f32,
+    origin: Vector,
+    angles: Vector,
+}
+
+#[repr(C)]
+pub struct Mouth {
+    mouth_open: u8,
+    snd_count: u8,
+    snd_avg: i32,
+}
+
+#[repr(C)]
+pub struct LatchedVars {
+    prev_anim_time: f32,
+    sequence_time: f32,
+    prev_seq_blending: [u8; 2],
+    prev_origin: Vector,
+    prev_angles: Vector,
+    prev_sequence: i32,
+    prev_frame: f32,
+    prev_controller: [u8; 4],
+    prev_blending: [u8; 2],
+}
+
+// https://doc.rust-lang.org/reference/type-layout.html#the-c-representation
+// "Note: The enum representation in C is implementation defined, so this is really a 'best guess'.
+//      In particular, this may be incorrect when the C code of interest is compiled with certain flags."
+#[repr(C)]
+pub enum ModType {
+    Brush,
+    Sprite,
+    Alias,
+    Studio,
+}
+
+#[repr(C)]
+pub enum SyncType {
+    Sync,
+    Rand,
+}
+
+pub const MAX_MODEL_NAME: usize = 64;
+
+#[repr(C)]
+pub struct Model {
+    name: [c_char; MAX_MODEL_NAME],
+    needload: Qboolean,
+    mod_type: ModType,
+    numframes: i32,
+    synctype: SyncType,
+    flags: i32,
+}
+
+pub const NUM_AMBIENTS: usize = 4;
+
+#[repr(C)]
+pub struct Mleaf {
+    contents: i32,
+    visframe: i32,
+    minmaxs: [u16; 6],
+    parent: usize,//*const Mnode,
+    compressed_vis: *const u8,
+    efrags: *const Efrag,
+    firstmarksurface: usize,//*const *const Msurface,
+    nummarksurfaces: i32,
+    key: i32,
+    ambient_sound_level: [u8; NUM_AMBIENTS],
+}
+
+#[repr(C)]
+pub struct Efrag {
+    leaf: *const Mleaf,
+    leaf_next: *const Efrag,
+    entity: *const Entity,
+    ent_next: *const Efrag,
+}
+
+pub const HISTORY_MAX: usize = 64;
+
+#[repr(C)]
+pub struct Entity {
+    index: i32,
+    player: Qboolean,
+    base_line: EntityState,
+    prev_state: EntityState,
+    cur_state: EntityState,
+    current_position: i32,
+    position_history: [PositionHistory; HISTORY_MAX],
+    mouth: Mouth,
+    latched: LatchedVars,
+    last_move: f32,
+    origin: Vector,
+    angles: Vector,
+    attachment: [Vector; 4],
+    trivial_accept: i32,
+    model: *const Model,
+    efrag: *const Efrag,
+    top_node: usize,//*const Mnode,
+    sync_base: f32,
+    vis_frame: i32,
+    floor_color: [u32; 4],
 }
