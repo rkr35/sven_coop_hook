@@ -32,8 +32,8 @@ impl<'a> From<module::Error<'a>> for Error<'a> {
 }
 
 pub struct Hook {
-    vtable_patch: Patch<*mut [usize; vgui2::panel::Vtable::NumEntries as usize]>,
-    modified_vtable: ManuallyDrop<Box<[usize; vgui2::panel::Vtable::NumEntries as usize]>>,
+    vtable_patch: Patch<*mut [usize; vgui2::panel::NUM_VTABLE_ENTRIES]>,
+    modified_vtable: ManuallyDrop<Box<[usize; vgui2::panel::NUM_VTABLE_ENTRIES]>>,
 }
 
 impl Drop for Hook {
@@ -61,15 +61,13 @@ impl Hook {
         }
     
         let mut modified_vtable = {
-            use vgui2::panel::Vtable;
-    
             unsafe { 
                 // Copy the original Panel vtable to our vtable.
                 let mut vtable = Box::new(*(*panel).vtable);
 
                 // Hook PaintTraverse and save the original.
                 OLD_PAINT_TRAVERSE = mem::replace(
-                    &mut vtable[Vtable::PaintTraverse as usize],
+                    &mut vtable[41],
                     my_paint_traverse as usize,
                 );
 

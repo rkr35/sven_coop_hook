@@ -2,7 +2,7 @@ use proc_macro::TokenStream as OldTokenStream;
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Ident, LitInt, parenthesized, parse_macro_input, Token, Type, Visibility};
+use syn::{Error, FnArg, Ident, LitInt, parenthesized, parse_macro_input, Pat, Token, Type, Visibility};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 
@@ -15,7 +15,8 @@ struct Function {
     index: LitInt,
     visibility: Visibility,
     name: Ident,
-    return_type: Type,
+    args: Punctuated<FnArg, Token![,]>,
+    return_type: Option<Type>,
     kind: FunctionKind,
 }
 
@@ -36,19 +37,26 @@ impl Parse for Function {
         let name = input.parse()?;
         
         // ()
-        let _args;
-        parenthesized!(_args in input);
+        let args;
+        parenthesized!(args in input);
+
+        let args = args.parse_terminated(FnArg::parse)?;
+
+        let mut return_type = None;
 
         // ->
-        input.parse::<Token![->]>()?;
-
-        // *const Entity
-        let return_type = input.parse()?;
+        if input.peek(Token![->]) {
+            input.parse::<Token![->]>()?;
+    
+            // *const Entity
+            return_type = Some(input.parse()?);
+        }
 
         Ok(Self {
             index,
             visibility,
             name,
+            args,
             return_type,
             kind: FunctionKind::Regular,
         })
@@ -57,18 +65,45 @@ impl Parse for Function {
 
 impl ToTokens for Function {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let Function { index, visibility, name, return_type, kind } = &self;
+        let Function { index, visibility, name, args, return_type, kind } = &self;
         
-        let address = match kind {
-            FunctionKind::Regular => quote! { self.functions[#index] },
-            FunctionKind::Virtual => quote! { (*self.vtable)[#index] },
+        let arg_names = args
+            .iter()
+            .map(|arg| if let FnArg::Typed(pattern_type) = arg {
+                if let Pat::Ident(p) = &*pattern_type.pat {
+                    p.ident.to_token_stream()
+                } else {
+                    Error::new_spanned(arg, "Unsupported argument form.").to_compile_error()
+                }
+            } else {
+                Error::new_spanned(arg, "Unsupported argument form.").to_compile_error()
+            });
+
+        let (function_type, address, call) = match kind {
+            FunctionKind::Regular => (
+                quote! { "C" fn(#args) },
+                quote! { self.functions[#index] },
+                quote! { function(#(#arg_names),*) }
+            ),
+
+            FunctionKind::Virtual => (
+                quote! { "fastcall" fn(this: usize, edx: usize, #args) },
+                quote! { (*self.vtable)[#index] },
+                quote! { function(self as *const _ as usize, 0, #(#arg_names),*) }
+            ),
+        };
+
+        let return_type = if let Some(return_type) = return_type {
+            quote! { -> #return_type }
+        } else {
+            quote! {}
         };
 
         *tokens = quote! {
-            #visibility fn #name(&self) -> #return_type {
-                type Function = extern "C" fn() -> #return_type;
+            #visibility fn #name(&self, #args) #return_type {
+                type Function = extern #function_type #return_type;
                 let function = unsafe { core::mem::transmute::<usize, Function>(#address) };
-                function()
+                #call
             }
         };
     }
@@ -111,6 +146,8 @@ pub fn functions(input: OldTokenStream) -> OldTokenStream {
         .map(ToTokens::into_token_stream)
         .collect();
 
+    println!("FUNCTIONS {}", generated);
+
     generated.into()
 }
 
@@ -123,7 +160,7 @@ pub fn vtable(input: OldTokenStream) -> OldTokenStream {
         .map(ToTokens::into_token_stream)
         .collect();
 
-    println!("{}", generated);
+    println!("VTABLE {}", generated);
 
     generated.into()
 }
