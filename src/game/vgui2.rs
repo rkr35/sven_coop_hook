@@ -16,12 +16,13 @@ pub mod panel {
 
     #[repr(C)]
     pub struct Panel {
-        pub vtable: *mut usize,
+        pub vtable: *mut [usize; Vtable::NumEntries as usize],
     }
 
     impl Panel {
         fn get_virtual_function_address(&self, function: Vtable) -> usize {
-            unsafe { *self.vtable.add(function as usize) }
+            let functions = unsafe { *self.vtable };
+            functions[function as usize]
         }
 
         pub fn get_name<'p>(&self, panel: &'p Panel) -> Option<&'p CStr> {

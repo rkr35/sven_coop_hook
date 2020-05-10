@@ -12,11 +12,12 @@ pub mod surface {
         SetTextColor = 15,
         SetTextPos = 16,
         PrintText = 18,
+        NumEntries = 91,
     }
 
     #[repr(C)]
     pub struct Surface {
-        vtable: *mut usize,
+        vtable: *mut [usize; Vtable::NumEntries as usize],
     }
 
     impl Surface {
@@ -27,7 +28,8 @@ pub mod surface {
         }*/
 
         fn get_virtual_function_address(&self, function: Vtable) -> usize {
-            unsafe { *self.vtable.add(function as usize) }
+            let functions = unsafe { *self.vtable };
+            functions[function as usize]
         }
 
         pub fn set_text_color(&self, r: i32, g: i32, b: i32, a: i32) {
