@@ -16,10 +16,10 @@ pub mod panel {
 
     impl Panel {
         vtable! {
-            36: get_name_impl(panel: &Panel) -> *const c_char,
+            36: get_name_impl(panel: *const Panel) -> *const c_char,
         }
 
-        pub fn get_name<'p>(&self, panel: &'p Panel) -> Option<&'p CStr> {
+        pub fn get_name(&self, panel: *const Panel) -> Option<&CStr> {
             let name = self.get_name_impl(panel);
             
             if name.is_null() {
