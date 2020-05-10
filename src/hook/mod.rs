@@ -1,4 +1,5 @@
 use crate::game::client::{ClientFuncs, PlayerMove};
+use crate::game::engine::EngineFuncs;
 use crate::game::hw;
 use crate::idle;
 use crate::memory;
@@ -100,20 +101,6 @@ impl Modules {
             vgui2: Module::from("vgui2.dll")?,
         })
     }
-}
-
-#[repr(usize)]
-pub enum EngineFuncsTable {
-    NumEntries = 131,
-}
-
-#[repr(C)]
-#[derive(Clone)]
-pub struct EngineFuncs {
-    functions: [usize; EngineFuncsTable::NumEntries as usize]
-}
-
-impl EngineFuncs {
 }
 
 fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8, Error<'static>> {
