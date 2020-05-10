@@ -64,22 +64,22 @@ impl ToTokens for Function {
 }
 
 struct Functions {
-    functions: Punctuated<Function, Token![,]>,
+    entries: Punctuated<Function, Token![,]>,
 }
 
 impl Parse for Functions {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Self {
-            functions: input.parse_terminated(Function::parse)?,
+            entries: input.parse_terminated(Function::parse)?,
         })
     }
 }
 
 #[proc_macro]
 pub fn functions(input: OldTokenStream) -> OldTokenStream {
-    let Functions { functions } = parse_macro_input!(input as Functions);
+    let Functions { entries } = parse_macro_input!(input as Functions);
     
-    let generated: TokenStream = functions
+    let generated: TokenStream = entries
         .into_iter()
         .map(ToTokens::into_token_stream)
         .collect();
