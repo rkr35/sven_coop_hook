@@ -1,0 +1,12 @@
+[package]
+name = "sven_coop_hook_macros"
+version = "0.1.0"
+authors = ["rkr35 <rkr35@drexel.edu>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = "1.0"
