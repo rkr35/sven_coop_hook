@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use sven_coop_hook_macros::functions;
 
-use std::mem;
 use std::os::raw::c_char;
 
 use ultraviolet::Vec3 as Vector;
