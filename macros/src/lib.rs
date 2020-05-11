@@ -39,15 +39,15 @@ impl Parse for Function {
 
         let args = args.parse_terminated(FnArg::parse)?;
 
-        let mut return_type = None;
-
         // ->
-        if input.peek(Token![->]) {
+        let return_type = if input.peek(Token![->]) {
             input.parse::<Token![->]>()?;
     
             // *const Entity
-            return_type = Some(input.parse()?);
-        }
+            Some(input.parse()?)
+        } else {
+            None
+        };
 
         Ok(Self {
             index,
