@@ -4,7 +4,6 @@ use sven_coop_hook_macros::functions;
 const NUM_ENGINE_FUNCS: usize = 131;
 
 #[repr(C)]
-#[derive(Clone)]
 pub struct EngineFuncs {
     functions: [usize; NUM_ENGINE_FUNCS]
 }
