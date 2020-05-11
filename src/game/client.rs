@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use sven_coop_hook_macros::functions;
 
 use std::mem;
 use std::os::raw::c_char;
@@ -19,20 +20,9 @@ pub struct ClientFuncs {
 }
 
 impl ClientFuncs {
-    // void(*CL_CreateMove) (float frametime, struct usercmd_s *cmd, int active);
-    pub fn create_move(&self, frame_time: f32, cmd: *mut UserCmd, active: i32) {
-        type CreateMove = extern "C" fn(frame_time: f32, cmd: *mut UserCmd, active: i32);
-        let address = self.functions[ClientFuncsTable::CreateMove as usize];
-        let function: CreateMove = unsafe { mem::transmute(address) };
-        function(frame_time, cmd, active);
-    }
-
-    // void(*V_CalcRefdef) (struct ref_params_s *pparams);
-    pub fn calc_ref_def(&self, params: *mut RefParams) {
-        type CalcRefDef = extern "C" fn(params: *mut RefParams);
-        let address = self.functions[ClientFuncsTable::CalcRefDef as usize];
-        let function: CalcRefDef = unsafe { mem::transmute(address) };
-        function(params);
+    functions! {
+        ClientFuncsTable::CreateMove pub create_move(frame_time: f32, cmd: *mut UserCmd, active: i32),
+        ClientFuncsTable::CalcRefDef pub calc_ref_def(params: *mut RefParams),
     }
 
     pub fn hook(&mut self, function: ClientFuncsTable, hooked: usize) {

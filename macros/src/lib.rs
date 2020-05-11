@@ -2,7 +2,7 @@ use proc_macro::TokenStream as OldTokenStream;
 
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{Error, FnArg, Ident, LitInt, parenthesized, parse_macro_input, Pat, Token, Type, Visibility};
+use syn::{Error, Expr, FnArg, Ident, parenthesized, parse_macro_input, Pat, Token, Type, Visibility};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::punctuated::Punctuated;
 
@@ -12,7 +12,7 @@ enum FunctionKind {
 }
 
 struct Function {
-    index: LitInt,
+    index: Expr,
     visibility: Visibility,
     name: Ident,
     args: Punctuated<FnArg, Token![,]>,
@@ -22,13 +22,10 @@ struct Function {
 
 impl Parse for Function {
     fn parse(input: ParseStream) -> Result<Self> {
-        // 51: pub get_local_player() -> *const Entity
+        // 51 pub get_local_player() -> *const Entity
 
         // 51
         let index = input.parse()?;
-        
-        // :
-        input.parse::<Token![:]>()?;
         
         // pub
         let visibility = input.parse()?;
@@ -78,6 +75,8 @@ impl ToTokens for Function {
             } else {
                 Error::new_spanned(arg, "Unsupported argument form.").to_compile_error()
             });
+
+        let index = quote! { (#index) as usize };
 
         let (function_type, address, call) = match kind {
             FunctionKind::Regular => (

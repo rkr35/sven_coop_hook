@@ -15,9 +15,9 @@ pub mod surface {
 
     impl Surface {
         vtable! {
-            15: pub set_text_color(r: i32, g: i32, b: i32, a: i32),
-            16: pub set_text_pos(x: i32, y: i32),
-            18: print_text_impl(text: *const wchar_t, len: i32),
+            15 pub set_text_color(r: i32, g: i32, b: i32, a: i32),
+            16 pub set_text_pos(x: i32, y: i32),
+            18 print_text_impl(text: *const wchar_t, len: i32),
         }
 
         pub fn print_text(&self, text: &[u16]) {

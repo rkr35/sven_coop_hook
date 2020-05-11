@@ -11,7 +11,8 @@ pub struct EngineFuncs {
 
 impl EngineFuncs {
     functions! {
-        36: pub get_max_clients() -> i32,
-        51: get_local_player() -> *const Entity,
+        36 pub get_max_clients() -> i32,
+        51 get_local_player() -> *const Entity,
+        53 pub get_entity_by_index(index: i32) -> *const Entity,
     }
 }
