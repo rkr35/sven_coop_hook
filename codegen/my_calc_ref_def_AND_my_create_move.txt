@@ -1,0 +1,74 @@
+470A5BD0 <sven_coop_hook.sven_coop | push ebx                                             | client.rs:55
+470A5BD1                           | sub esp,C                                            |
+470A5BD4                           | cmp dword ptr ds:[<ORIGINAL_CLIENT_FUNCS>],1         | client.rs:56
+470A5BDB                           | jne sven_coop_hook.470A5C44                          |
+470A5BDD                           | mov eax,dword ptr ds:[<&CL_CreateMove>]              | client.rs:56
+470A5BE2                           | test eax,eax                                         |
+470A5BE4                           | je sven_coop_hook.470A5C5C                           |
+470A5BE6                           | mov ecx,dword ptr ss:[esp+1C]                        | client.rs:56
+470A5BEA                           | mov ebx,dword ptr ss:[esp+18]                        |
+470A5BEE                           | vmovss xmm0,dword ptr ss:[esp+14]                    |
+470A5BF4                           | mov dword ptr ss:[esp+8],ecx                         | [esp+8]:L"e-brazilian"
+470A5BF8                           | mov dword ptr ss:[esp+4],ebx                         |
+470A5BFC                           | vmovss dword ptr ss:[esp],xmm0                       |
+470A5C01                           | call eax                                             |
+470A5C03                           | test ebx,ebx                                         | client.rs:58
+470A5C05                           | je sven_coop_hook.470A5C3F                           |
+470A5C07                           | test bl,3                                            |
+470A5C0A                           | jne sven_coop_hook.470A5C3F                          |
+470A5C0C                           | movzx eax,word ptr ds:[ebx+1E]                       | client.rs:62
+470A5C10                           | test al,2                                            |
+470A5C12                           | je sven_coop_hook.470A5C3F                           |
+470A5C14                           | mov ecx,eax                                          | ecx:&"RB_GREN0"
+470A5C16                           | and ecx,FFFD                                         |
+470A5C1C                           | mov word ptr ds:[ebx+1E],cx                          |
+470A5C20                           | mov ecx,dword ptr ds:[<PLAYER_MOVE>]                 |
+470A5C26                           | test byte ptr ds:[ecx+B9],2                          |
+470A5C2D                           | jne sven_coop_hook.470A5C38                          |
+470A5C2F                           | cmp dword ptr ds:[ecx+E4],2                          |
+470A5C36                           | jl sven_coop_hook.470A5C3F                           |
+470A5C38                           | or eax,2                                             |
+470A5C3B                           | mov word ptr ds:[ebx+1E],ax                          |
+470A5C3F                           | add esp,C                                            | client.rs:63
+470A5C42                           | pop ebx                                              |
+470A5C43                           | ret                                                  |
+470A5C44                           | mov dword ptr ss:[esp],sven_coop_hook.470DF47C       | client.rs:56, 470DF47C:&"src\\hook\\client.rs"
+470A5C4B                           | mov ecx,sven_coop_hook.470E84E4                      | client.rs:0, 470E84E4:"called `Option::unwrap()` on a `None` value"
+470A5C50                           | mov edx,2B                                           | 2B:'+'
+470A5C55                           | call <sven_coop_hook.core::panicking::panic>         |
+470A5C5A                           | ud2                                                  |
+470A5C5C                           | mov dword ptr ss:[esp],sven_coop_hook.470DF48C       | client.rs:56, 470DF48C:&"src\\hook\\client.rs"
+470A5C63                           | mov ecx,sven_coop_hook.470E84E4                      | client.rs:0, 470E84E4:"called `Option::unwrap()` on a `None` value"
+470A5C68                           | mov edx,2B                                           | 2B:'+'
+470A5C6D                           | call <sven_coop_hook.core::panicking::panic>         |
+470A5C72                           | ud2                                                  |
+470A5C74                           | int3                                                 |
+470A5C75                           | int3                                                 |
+470A5C76                           | int3                                                 |
+470A5C77                           | int3                                                 |
+470A5C78                           | int3                                                 |
+470A5C79                           | int3                                                 |
+470A5C7A                           | int3                                                 |
+470A5C7B                           | int3                                                 |
+470A5C7C                           | int3                                                 |
+470A5C7D                           | int3                                                 |
+470A5C7E                           | int3                                                 |
+470A5C7F                           | int3                                                 |
+470A5C80 <sven_coop_hook.sven_coop | cmp dword ptr ds:[<ORIGINAL_CLIENT_FUNCS>],1         |
+470A5C87                           | jne sven_coop_hook.470A5C94                          |
+470A5C89                           | mov eax,dword ptr ds:[<&V_CalcRefdef>]               | client.rs:67
+470A5C8E                           | test eax,eax                                         |
+470A5C90                           | je sven_coop_hook.470A5CAD                           |
+470A5C92                           | jmp eax                                              | client.rs:67
+470A5C94                           | mov ecx,sven_coop_hook.470E84E4                      | 470E84E4:"called `Option::unwrap()` on a `None` value"
+470A5C99                           | mov edx,2B                                           | 2B:'+'
+470A5C9E                           | push sven_coop_hook.470DF49C                         | 470DF49C:&"src\\hook\\client.rs"
+470A5CA3                           | call <sven_coop_hook.core::panicking::panic>         | client.rs:0
+470A5CA8                           | add esp,4                                            |
+470A5CAB                           | ud2                                                  | client.rs:67
+470A5CAD                           | mov ecx,sven_coop_hook.470E84E4                      | 470E84E4:"called `Option::unwrap()` on a `None` value"
+470A5CB2                           | mov edx,2B                                           | 2B:'+'
+470A5CB7                           | push sven_coop_hook.470DF4AC                         | 470DF4AC:&"src\\hook\\client.rs"
+470A5CBC                           | call <sven_coop_hook.core::panicking::panic>         | client.rs:0
+470A5CC1                           | add esp,4                                            |
+470A5CC4                           | ud2                                                  |
