@@ -1,5 +1,4 @@
-use crate::game::client::{ClientFuncs, PlayerMove};
-use crate::game::engine::EngineFuncs;
+use crate::game::{cl_clientfuncs_s, cl_enginefuncs_s, playermove_s};
 use crate::game::hw;
 use crate::idle;
 use crate::memory;
@@ -15,9 +14,9 @@ mod panel;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
-pub static mut ENGINE_FUNCS: *const EngineFuncs = ptr::null();
-pub static mut ORIGINAL_CLIENT_FUNCS: Option<ClientFuncs> = None;
-pub static mut PLAYER_MOVE: *const PlayerMove = ptr::null();
+pub static mut ENGINE_FUNCS: *const cl_enginefuncs_s = ptr::null();
+pub static mut ORIGINAL_CLIENT_FUNCS: Option<cl_clientfuncs_s> = None;
+pub static mut PLAYER_MOVE: *const playermove_s = ptr::null();
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -63,18 +62,18 @@ impl Hook {
             SURFACE = modules.hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?;
             info!("SURFACE = {:?}", SURFACE);
 
-            let engine_funcs: *const *const EngineFuncs = screen_fade.add(13).cast();
+            let engine_funcs: *const *const cl_enginefuncs_s = screen_fade.add(13).cast();
             ENGINE_FUNCS = engine_funcs.read_unaligned();
             memory::ptr_check(ENGINE_FUNCS)?;
             info!("ENGINE_FUNCS = {:?}", ENGINE_FUNCS);
     
-            let client_funcs: *const *mut ClientFuncs = screen_fade.add(19).cast();
+            let client_funcs: *const *mut cl_clientfuncs_s = screen_fade.add(19).cast();
             let client_funcs = client_funcs.read_unaligned();
             memory::ptr_check(client_funcs)?;
             info!("client_funcs = {:?}", client_funcs);
             ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
     
-            let player_move: *const *const PlayerMove = screen_fade.add(36).cast();
+            let player_move: *const *const playermove_s = screen_fade.add(36).cast();
             PLAYER_MOVE = player_move.read_unaligned();
             memory::ptr_check(PLAYER_MOVE)?;
             info!("PLAYER_MOVE = {:?}", PLAYER_MOVE);
