@@ -88,17 +88,12 @@ impl Hook {
     }
 }
 
-extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: *const vgui2::Panel, force_repaint: bool, allow_force: bool) {
-    let original: extern "fastcall" fn(&vgui2::Panel, usize, *const vgui2::Panel, bool, bool) = unsafe { mem::transmute(OLD_PAINT_TRAVERSE) };
+unsafe extern "fastcall" fn my_paint_traverse(this: *const vgui2::Panel, edx: usize, panel: *const vgui2::Panel, force_repaint: bool, allow_force: bool) {
+    type PaintTraverse = extern "fastcall" fn(*const vgui2::Panel, usize, *const vgui2::Panel, bool, bool);
+    let original: PaintTraverse = mem::transmute(OLD_PAINT_TRAVERSE);
     original(this, edx, panel, force_repaint, allow_force);
 
-    if let Some(name) = this.get_name(panel) {
-        let name = name.to_bytes();
-        
-        if name == b"StaticPanel" {
-
-        } else if name == b"BasePanel" {
-
-        } 
+    if let Some(name) = (*this).get_name(panel) {
+        let _ = name.to_bytes();
     }
 }
