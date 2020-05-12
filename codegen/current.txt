@@ -1,0 +1,44 @@
+push esi
+sub esp,C
+mov esi,dword ptr ss:[esp+18]
+vmovss xmm0,dword ptr ss:[esp+14]
+mov eax,dword ptr ss:[esp+1C]
+mov dword ptr ss:[esp+8],eax
+mov dword ptr ss:[esp+4],esi
+vmovss dword ptr ss:[esp],xmm0
+call dword ptr ds:[<&CL_CreateMove>]
+test esi,esi
+je sven_coop_hook.7BD35C2C
+movzx eax,word ptr ds:[esi+1E]
+test al,2
+je sven_coop_hook.7BD35C2C
+mov ecx,eax
+and ecx,FFFD
+mov word ptr ds:[esi+1E],cx
+mov ecx,dword ptr ds:[<PLAYER_MOVE>]
+test byte ptr ds:[ecx+B9],2
+jne sven_coop_hook.7BD35C25
+cmp dword ptr ds:[ecx+E4],2
+jl sven_coop_hook.7BD35C2C
+or eax,2
+mov word ptr ds:[esi+1E],ax
+add esp,C
+pop esi
+ret 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+int3 
+mov eax,dword ptr ds:[<&V_CalcRefdef>]
+jmp eax

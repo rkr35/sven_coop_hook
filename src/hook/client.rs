@@ -1,5 +1,4 @@
 use crate::game::{cl_clientfuncs_s, ref_params_s, usercmd_s};
-use crate::memory;
 use crate::yank::Yank;
 
 use log::info;
@@ -62,7 +61,7 @@ unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active
     let original = ORIGINAL_CLIENT_FUNCS.as_ref().yank().CL_CreateMove.yank();
     original(frame_time, cmd, active);
 
-    if memory::ptr_check(cmd).is_err() {
+    if cmd.is_null() {
         return;
     }
 
@@ -74,7 +73,7 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
     let original = ORIGINAL_CLIENT_FUNCS.as_ref().yank().V_CalcRefdef.yank();
     original(params);
     
-    if memory::ptr_check(params).is_err() {
+    if params.is_null() {
         return;
     }
 }
