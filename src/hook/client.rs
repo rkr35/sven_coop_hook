@@ -29,6 +29,11 @@ impl Hook {
 impl Drop for Hook {
     fn drop(&mut self) {
         unsafe {
+            // TODO:
+            // Investigate race condition w/ client hooks accessing ORIGINAL_CLIENT_FUNCS?
+            // Shouldn't matter if the generated assembly always resolves the absolute address of
+            // original client functions, i.e., doesn't use the ORIGINAL_CLIENT_FUNCS to calculate
+            // the address.
             *self.client_funcs = ORIGINAL_CLIENT_FUNCS.take().unwrap();
         }
 
