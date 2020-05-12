@@ -1,0 +1,29 @@
+7BBF5BD0 <sven_coop_hook.sven_coop_ | push ebx                                             | client.rs:62
+7BBF5BD1                            | sub esp,C                                            |
+7BBF5BD4                            | mov ebx,dword ptr ss:[esp+18]                        |
+7BBF5BD8                            | vmovss xmm0,dword ptr ss:[esp+14]                    |
+7BBF5BDE                            | mov eax,dword ptr ss:[esp+1C]                        |
+7BBF5BE2                            | mov dword ptr ss:[esp+8],eax                         | client.rs:63
+7BBF5BE6                            | mov dword ptr ss:[esp+4],ebx                         |
+7BBF5BEA                            | vmovss dword ptr ss:[esp],xmm0                       |
+7BBF5BEF                            | call dword ptr ds:[<&CL_CreateMove>]                 |
+7BBF5BF5                            | test ebx,ebx                                         | client.rs:65
+7BBF5BF7                            | je sven_coop_hook.7BBF5C31                           |
+7BBF5BF9                            | test bl,3                                            |
+7BBF5BFC                            | jne sven_coop_hook.7BBF5C31                          |
+7BBF5BFE                            | movzx eax,word ptr ds:[ebx+1E]                       | client.rs:69
+7BBF5C02                            | test al,2                                            |
+7BBF5C04                            | je sven_coop_hook.7BBF5C31                           |
+7BBF5C06                            | mov ecx,eax                                          |
+7BBF5C08                            | and ecx,FFFD                                         |
+7BBF5C0E                            | mov word ptr ds:[ebx+1E],cx                          |
+7BBF5C12                            | mov ecx,dword ptr ds:[<PLAYER_MOVE>]                 |
+7BBF5C18                            | test byte ptr ds:[ecx+B9],2                          |
+7BBF5C1F                            | jne sven_coop_hook.7BBF5C2A                          |
+7BBF5C21                            | cmp dword ptr ds:[ecx+E4],2                          |
+7BBF5C28                            | jl sven_coop_hook.7BBF5C31                           |
+7BBF5C2A                            | or eax,2                                             |
+7BBF5C2D                            | mov word ptr ds:[ebx+1E],ax                          |
+7BBF5C31                            | add esp,C                                            | client.rs:70
+7BBF5C34                            | pop ebx                                              |
+7BBF5C35                            | ret                                                  |
