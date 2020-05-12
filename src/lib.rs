@@ -23,6 +23,7 @@ mod hook;
 mod macros;
 mod memory;
 mod module;
+mod yank;
 
 fn msg_box(text: &[u16], caption: &[u16]) {
     unsafe {

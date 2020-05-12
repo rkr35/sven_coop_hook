@@ -1,29 +1,41 @@
-7BBF5BD0 <sven_coop_hook.sven_coop_ | push ebx                                             | client.rs:62
-7BBF5BD1                            | sub esp,C                                            |
-7BBF5BD4                            | mov ebx,dword ptr ss:[esp+18]                        |
-7BBF5BD8                            | vmovss xmm0,dword ptr ss:[esp+14]                    |
-7BBF5BDE                            | mov eax,dword ptr ss:[esp+1C]                        |
-7BBF5BE2                            | mov dword ptr ss:[esp+8],eax                         | client.rs:63
-7BBF5BE6                            | mov dword ptr ss:[esp+4],ebx                         |
-7BBF5BEA                            | vmovss dword ptr ss:[esp],xmm0                       |
-7BBF5BEF                            | call dword ptr ds:[<&CL_CreateMove>]                 |
-7BBF5BF5                            | test ebx,ebx                                         | client.rs:65
-7BBF5BF7                            | je sven_coop_hook.7BBF5C31                           |
-7BBF5BF9                            | test bl,3                                            |
-7BBF5BFC                            | jne sven_coop_hook.7BBF5C31                          |
-7BBF5BFE                            | movzx eax,word ptr ds:[ebx+1E]                       | client.rs:69
-7BBF5C02                            | test al,2                                            |
-7BBF5C04                            | je sven_coop_hook.7BBF5C31                           |
-7BBF5C06                            | mov ecx,eax                                          |
-7BBF5C08                            | and ecx,FFFD                                         |
-7BBF5C0E                            | mov word ptr ds:[ebx+1E],cx                          |
-7BBF5C12                            | mov ecx,dword ptr ds:[<PLAYER_MOVE>]                 |
-7BBF5C18                            | test byte ptr ds:[ecx+B9],2                          |
-7BBF5C1F                            | jne sven_coop_hook.7BBF5C2A                          |
-7BBF5C21                            | cmp dword ptr ds:[ecx+E4],2                          |
-7BBF5C28                            | jl sven_coop_hook.7BBF5C31                           |
-7BBF5C2A                            | or eax,2                                             |
-7BBF5C2D                            | mov word ptr ds:[ebx+1E],ax                          |
-7BBF5C31                            | add esp,C                                            | client.rs:70
-7BBF5C34                            | pop ebx                                              |
-7BBF5C35                            | ret                                                  |
+7BC95BD0 <sven_coop_hook.sven_coop_ | push ebx                                             | client.rs:56
+7BC95BD1                            | sub esp,C                                            |
+7BC95BD4                            | mov ebx,dword ptr ss:[esp+18]                        |
+7BC95BD8                            | vmovss xmm0,dword ptr ss:[esp+14]                    |
+7BC95BDE                            | mov eax,dword ptr ss:[esp+1C]                        |
+7BC95BE2                            | mov dword ptr ss:[esp+8],eax                         | active
+7BC95BE6                            | mov dword ptr ss:[esp+4],ebx                         | cmd (usercmd_s*)
+7BC95BEA                            | vmovss dword ptr ss:[esp],xmm0                       | frametime
+7BC95BEF                            | call dword ptr ds:[<&CL_CreateMove>]                 |
+7BC95BF5                            | test ebx,ebx                                         | client.rs:60
+7BC95BF7                            | je sven_coop_hook.7BC95C31                           |
+7BC95BF9                            | test bl,3                                            |
+7BC95BFC                            | jne sven_coop_hook.7BC95C31                          |
+7BC95BFE                            | movzx eax,word ptr ds:[ebx+1E]                       | client.rs:64
+7BC95C02                            | test al,2                                            |
+7BC95C04                            | je sven_coop_hook.7BC95C31                           |
+7BC95C06                            | mov ecx,eax                                          |
+7BC95C08                            | and ecx,FFFD                                         |
+7BC95C0E                            | mov word ptr ds:[ebx+1E],cx                          |
+7BC95C12                            | mov ecx,dword ptr ds:[<PLAYER_MOVE>]                 |
+7BC95C18                            | test byte ptr ds:[ecx+B9],2                          |
+7BC95C1F                            | jne sven_coop_hook.7BC95C2A                          |
+7BC95C21                            | cmp dword ptr ds:[ecx+E4],2                          |
+7BC95C28                            | jl sven_coop_hook.7BC95C31                           |
+7BC95C2A                            | or eax,2                                             |
+7BC95C2D                            | mov word ptr ds:[ebx+1E],ax                          |
+7BC95C31                            | add esp,C                                            | client.rs:65
+7BC95C34                            | pop ebx                                              |
+7BC95C35                            | ret                                                  |
+7BC95C36                            | int3                                                 |
+7BC95C37                            | int3                                                 |
+7BC95C38                            | int3                                                 |
+7BC95C39                            | int3                                                 |
+7BC95C3A                            | int3                                                 |
+7BC95C3B                            | int3                                                 |
+7BC95C3C                            | int3                                                 |
+7BC95C3D                            | int3                                                 |
+7BC95C3E                            | int3                                                 |
+7BC95C3F                            | int3                                                 |
+7BC95C40 <sven_coop_hook.sven_coop_ | mov eax,dword ptr ds:[<&V_CalcRefdef>]               | client.rs:69
+7BC95C45                            | jmp eax                                              | client.rs:70
