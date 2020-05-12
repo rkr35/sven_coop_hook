@@ -17,6 +17,9 @@ lto = 'fat'
 codegen-units = 1
 debug = true
 
+[build-dependencies]
+bindgen = "0.53"
+
 [dependencies]
 log = "0.4"
 simplelog = "0.7"
