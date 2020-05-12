@@ -6,10 +6,8 @@ use std::mem::{self, ManuallyDrop};
 
 use log::{error, info};
 use thiserror::Error;
-use wchar::wch_c as w;
 
 // BEGIN MUTABLE GLOBAL STATE
-use crate::hook::SURFACE;
 static mut OLD_PAINT_TRAVERSE: usize = 0;
 // END MUTABLE GLOBAL STATE
 
@@ -100,11 +98,7 @@ extern "fastcall" fn my_paint_traverse(this: &vgui2::Panel, edx: usize, panel: *
         if name == b"StaticPanel" {
 
         } else if name == b"BasePanel" {
-            let surface = unsafe { &*SURFACE }; // TODO: Casting a raw pointer to a reference is immediate UB if the reference aliases?
-            surface.set_text_color(0, 255, 0, 255);
-            surface.set_text_pos(3, 7);
-            let s = w!("The quick brown fox jumps over the lazy dog.");
-            surface.print_text(s);
+
         } 
     }
 }
