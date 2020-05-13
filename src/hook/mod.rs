@@ -141,8 +141,9 @@ unsafe fn init_player_move(screen_fade: *const u8) -> Result<()> {
 unsafe fn init_user_msg() -> Result<()> {
     let user_msg: *const u8 = mem::transmute((*ENGINE_FUNCS).pfnHookUserMsg.unwrap());
     let user_msg: *const *const u8 = user_msg.add(9).cast();
-    let user_msg = user_msg.read_unaligned();
-    info!("xxx{:?}", user_msg);
+    let next_instruction = user_msg.add(1) as usize;
+    let user_msg = user_msg.read_unaligned().add(next_instruction);
+    info!("{:?}", user_msg);
     Ok(())
 }
 
