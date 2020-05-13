@@ -33,7 +33,7 @@ pub enum Error<'a> {
     #[error("bytes not found for {0}")]
     NotFoundBytes(&'a str),
 
-    #[error("patch error: {0}")]
+    #[error("memory error: {0}")]
     Patch(#[from] memory::Error),
 }
 
