@@ -1,45 +1,7 @@
-// https://docs.microsoft.com/en-us/windows/win32/winprog/using-the-windows-headers#faster-builds-with-smaller-header-files
-#define NOATOM
-#define NOCLIPBOARD
-#define NOCOLOR
-#define NOCOMM
-#define NOCTLMGR
-#define NODEFERWINDOWPOS
-#define NODRAWTEXT
-#define NOGDI
-#define NOGDICAPMASKS
-#define NOHELP
-#define NOICONS
-#define NOKANJI
-#define NOKERNEL
-#define NOKEYSTATES
-#define NOMB
-#define NOMCX
-#define NOMEMMGR
-#define NOMENUS
-#define NOMETAFILE
-#define NOMINMAX
-#define NOMSG
-#define NONLS
-#define NOOEMRESOURCE
-#define NOOPENFILE
-#define NOPROFILER
-#define NORASTEROPS
-#define NOSCROLL
-#define NOSERVICE
-#define NOSHOWWINDOW
-#define NOSOUND
-#define NOSYSCOMMANDS
-#define NOSYSMETRICS
-#define NOTEXTMETRIC
-#define NOUSER
-#define NOVIRTUALKEYCODES
-#define NOWH
-#define NOWINMESSAGES
-#define NOWINOFFSETS
-#define NOWINSTYLES
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
+DECLARE_HANDLE(HSPRITE);
+typedef void *PVOID;
+typedef unsigned long DWORD;
 
 typedef struct vec3_s {
     float x, y, z;
