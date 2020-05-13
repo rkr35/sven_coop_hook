@@ -1,5 +1,8 @@
-use crate::game::{cl_clientfuncs_s, ref_params_s, usercmd_s};
+use crate::game::{cl_clientfuncs_s, cl_entity_s, ref_params_s, usercmd_s};
 use crate::yank::Yank;
+
+use std::ffi::CStr;
+use std::os::raw::c_char;
 
 use log::info;
 
@@ -17,6 +20,7 @@ impl Hook {
         unsafe {
             (*client_funcs).CL_CreateMove = Some(my_create_move);
             (*client_funcs).V_CalcRefdef = Some(my_calc_ref_def);
+            (*client_funcs).HUD_AddEntity = Some(my_hud_add_entity);
         }
 
         Self {
@@ -76,4 +80,9 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
     if params.is_null() {
         return;
     }
+}
+
+unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
+    let original = ORIGINAL_CLIENT_FUNCS.as_ref().yank().HUD_AddEntity.yank();
+    original(typ, ent, modelname)
 }
