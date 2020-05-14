@@ -1,4 +1,5 @@
 use crate::game::{cl_clientfuncs_s, cl_entity_s, entity_state_s, ref_params_s, usercmd_s};
+use crate::single_thread_verifier;
 use crate::yank::Yank;
 
 use std::collections::HashMap;
@@ -72,6 +73,8 @@ unsafe fn _bunny_hop(cmd: *mut usercmd_s) {
 }
 
 unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active: i32) {
+    single_thread_verifier::assert();
+
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().CL_CreateMove.yank();
     original(frame_time, cmd, active);
 
@@ -82,6 +85,8 @@ unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active
 
 // void(*V_CalcRefdef) (struct ref_params_s *pparams);
 unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
+    single_thread_verifier::assert();
+
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().V_CalcRefdef.yank();
     original(params);
     
@@ -104,6 +109,8 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
 // Max entities: 8192 ?
 // 
 unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
+    single_thread_verifier::assert();
+
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_AddEntity.yank();
     let ret = original(typ, ent, modelname);
 
@@ -134,6 +141,8 @@ unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelnam
 }
 
 unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: *const entity_state_s) {
+    single_thread_verifier::assert();
+
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_ProcessPlayerState.yank();
     original(dst, src)
 }
