@@ -54,7 +54,7 @@ impl Drop for Hook {
     }
 }
 
-unsafe fn bunny_hop(cmd: *mut usercmd_s) {
+unsafe fn _bunny_hop(cmd: *mut usercmd_s) {
     const IN_JUMP: u16 = 1 << 1;
     const FL_ONGROUND: i32 = 1 << 9;
 
@@ -78,8 +78,6 @@ unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active
     if cmd.is_null() {
         return;
     }
-
-    bunny_hop(cmd);
 }
 
 // void(*V_CalcRefdef) (struct ref_params_s *pparams);
