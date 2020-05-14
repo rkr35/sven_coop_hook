@@ -139,11 +139,41 @@ unsafe fn init_player_move(screen_fade: *const u8) -> Result<()> {
 }
 
 unsafe fn init_user_msg() -> Result<()> {
-    let user_msg: *const u8 = mem::transmute((*ENGINE_FUNCS).pfnHookUserMsg.unwrap());
-    let user_msg: *const *const u8 = user_msg.add(9).cast();
-    let next_instruction = user_msg.add(1) as usize;
-    let user_msg = user_msg.read_unaligned().add(next_instruction);
-    info!("{:?}", user_msg);
+    /*
+        FF 74 24 08 FF 74 24 08
+        hook_user_msg:  push dword ptr ss:[esp+8]
+                        push dword ptr ss:[esp+8]
+    */
+    let hook_user_msg: *const u8 = mem::transmute((*ENGINE_FUNCS).pfnHookUserMsg.unwrap());
+    
+    /*
+        E8 83 25 01 00
+        call_inner: call hw.421C800
+    */
+    let call_inner_operand: *const *const u8 = hook_user_msg.add(9).cast();
+
+    /*
+        next_instruction:   we only care about the absolute address to resolve the jump of previous call.
+    */
+    let next_instruction = call_inner_operand.add(1) as usize;
+
+    /*
+        53 8B 5C 24 08 55 8B 6C 24 10 56
+        inner_function: push ebx
+                        mov ebx,dword ptr ss:[esp+8]
+                        push ebp
+                        mov ebp,dword ptr ss:[esp+10]
+                        push esi
+    */    
+    let inner_function = call_inner_operand.read_unaligned().add(next_instruction);
+
+    /*
+        8B 35 50 8D B5 04
+        load_head:  mov esi,dword ptr ds:[4B58D50]
+    */
+    let head_of_user_msg_linked_list: *const *const user_msg_s = inner_function.add(13).cast();
+    USER_MSG = head_of_user_msg_linked_list.read_unaligned();
+    info!("USER_MSG = {:?}", USER_MSG);
     Ok(())
 }
 
