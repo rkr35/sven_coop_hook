@@ -62,7 +62,7 @@ unsafe fn bunny_hop(cmd: *mut usercmd_s) {
 }
 
 unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active: i32) {
-    let original = ORIGINAL_CLIENT_FUNCS.as_ref().yank().CL_CreateMove.yank();
+    let original = ORIGINAL_CLIENT_FUNCS.yank_ref().CL_CreateMove.yank();
     original(frame_time, cmd, active);
 
     if cmd.is_null() {
@@ -74,7 +74,7 @@ unsafe extern "C" fn my_create_move(frame_time: f32, cmd: *mut usercmd_s, active
 
 // void(*V_CalcRefdef) (struct ref_params_s *pparams);
 unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
-    let original = ORIGINAL_CLIENT_FUNCS.as_ref().yank().V_CalcRefdef.yank();
+    let original = ORIGINAL_CLIENT_FUNCS.yank_ref().V_CalcRefdef.yank();
     original(params);
     
     if params.is_null() {
