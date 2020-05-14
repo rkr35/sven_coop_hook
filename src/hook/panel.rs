@@ -92,8 +92,4 @@ unsafe extern "fastcall" fn my_paint_traverse(this: *const vgui2::Panel, edx: us
     type PaintTraverse = extern "fastcall" fn(*const vgui2::Panel, usize, *const vgui2::Panel, bool, bool);
     let original: PaintTraverse = mem::transmute(OLD_PAINT_TRAVERSE);
     original(this, edx, panel, force_repaint, allow_force);
-
-    if let Some(name) = (*this).get_name(panel) {
-        let _ = name.to_bytes();
-    }
 }
