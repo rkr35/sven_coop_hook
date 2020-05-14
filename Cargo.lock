@@ -435,6 +435,7 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "log",
+ "rustc-hash",
  "simplelog",
  "sven_coop_hook_macros",
  "thiserror",
