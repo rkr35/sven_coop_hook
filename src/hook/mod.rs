@@ -12,6 +12,7 @@ use thiserror::Error;
 
 mod client;
 mod panel;
+mod user_msg;
 
 // BEGIN MUTABLE GLOBAL STATE
 pub static mut SURFACE: *const hw::Surface = ptr::null();
@@ -56,6 +57,7 @@ impl<'a> From<panel::Error<'a>> for Error<'a> {
 struct Hook {
     _client: client::Hook,
     _panel: panel::Hook,
+    _user_msg: user_msg::Hook,
 }
 
 impl Hook {
@@ -72,6 +74,7 @@ impl Hook {
         Ok(Hook {
             _client: unsafe { hook_client_funcs(screen_fade)? },
             _panel: panel::Hook::new(&modules.vgui2)?,
+            _user_msg: user_msg::Hook::new(),
         })
     }
 }
