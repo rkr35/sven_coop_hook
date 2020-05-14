@@ -124,15 +124,6 @@ unsafe fn init_engine_funcs(screen_fade: *const u8) -> Result<()> {
     Ok(())
 }
 
-unsafe fn hook_client_funcs(screen_fade: *const u8) -> Result<client::Hook> {
-    let client_funcs: *const *mut cl_clientfuncs_s = screen_fade.add(19).cast();
-    let client_funcs = client_funcs.read_unaligned();
-    memory::ptr_check(client_funcs)?;
-    info!("client_funcs = {:?}", client_funcs);
-    ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
-    Ok(client::Hook::new(client_funcs))
-}
-
 unsafe fn init_player_move(screen_fade: *const u8) -> Result<()> {
     let player_move: *const *const playermove_s = screen_fade.add(36).cast();
     PLAYER_MOVE = player_move.read_unaligned();
@@ -178,6 +169,15 @@ unsafe fn init_user_msg() -> Result<()> {
     USER_MSG = head_of_user_msg_linked_list.read_unaligned();
     info!("USER_MSG = {:?}", USER_MSG);
     Ok(())
+}
+
+unsafe fn hook_client_funcs(screen_fade: *const u8) -> Result<client::Hook> {
+    let client_funcs: *const *mut cl_clientfuncs_s = screen_fade.add(19).cast();
+    let client_funcs = client_funcs.read_unaligned();
+    memory::ptr_check(client_funcs)?;
+    info!("client_funcs = {:?}", client_funcs);
+    ORIGINAL_CLIENT_FUNCS = (*client_funcs).clone().into();
+    Ok(client::Hook::new(client_funcs))
 }
 
 pub fn run() -> Result<()> {
