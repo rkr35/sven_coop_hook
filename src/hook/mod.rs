@@ -27,10 +27,10 @@ type Result<T> = std::result::Result<T, Error<'static>>;
 #[derive(Error, Debug)]
 pub enum Error<'a> {
     #[error("{0}")]
-    Module(module::Error<'a>),
+    Module(#[from] module::Error<'static>),
 
     #[error("panel hook error: {0}")]
-    Panel(panel::Error<'a>),
+    Panel(#[from] panel::Error<'static>),
 
     #[error("could not find address of the string literal \"{0}\"")]
     NotFoundStringLit(&'a str),
@@ -40,18 +40,8 @@ pub enum Error<'a> {
 
     #[error("memory error: {0}")]
     Patch(#[from] memory::Error),
-}
 
-impl<'a> From<module::Error<'a>> for Error<'a> {
-    fn from(e: module::Error) -> Error {
-        Error::Module(e)
-    }
-}
 
-impl<'a> From<panel::Error<'a>> for Error<'a> {
-    fn from(e: panel::Error) -> Error {
-        Error::Panel(e)
-    }
 }
 
 struct Hook {

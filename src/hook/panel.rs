@@ -14,19 +14,13 @@ static mut OLD_PAINT_TRAVERSE: usize = 0;
 #[derive(Error, Debug)]
 pub enum Error<'a> {
     #[error("{0}")]
-    Module(module::Error<'a>),
+    Module(#[from] module::Error<'static>),
 
     #[error("interface \"{0}\" has a null vtable")]
     NullVtable(&'a str),
 
     #[error("patch error: {0}")]
     Patch(#[from] memory::Error),
-}
-
-impl<'a> From<module::Error<'a>> for Error<'a> {
-    fn from(e: module::Error) -> Error {
-        Error::Module(e)
-    }
 }
 
 pub struct Hook {
