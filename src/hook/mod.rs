@@ -167,6 +167,7 @@ unsafe fn init_user_msg() -> Result<()> {
     */
     let head_of_user_msg_linked_list: *const *const user_msg_s = inner_function.add(13).cast();
     USER_MSG = head_of_user_msg_linked_list.read_unaligned();
+    memory::ptr_check(USER_MSG)?;
     info!("USER_MSG = {:?}", USER_MSG);
     Ok(())
 }
