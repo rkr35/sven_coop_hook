@@ -91,6 +91,6 @@ typedef struct user_msg_s
 	int iMsg;
 	int iSize;
 	char szName[16];
-	struct _UserMsg* next;
+	struct user_msg_s* next;
 	pfnUserMsgHook pfn;
 } user_msg_t;

@@ -19,7 +19,7 @@ pub static mut SURFACE: *const hw::Surface = ptr::null();
 pub static mut ENGINE_FUNCS: *const cl_enginefuncs_s = ptr::null();
 pub static mut ORIGINAL_CLIENT_FUNCS: Option<cl_clientfuncs_s> = None;
 pub static mut PLAYER_MOVE: *const playermove_s = ptr::null();
-pub static mut USER_MSG: *const user_msg_s = ptr::null(); 
+pub static mut USER_MSG: *mut user_msg_s = ptr::null_mut(); 
 // END MUTABLE GLOBAL STATE
 
 type Result<T> = std::result::Result<T, Error<'static>>;
@@ -41,7 +41,8 @@ pub enum Error<'a> {
     #[error("memory error: {0}")]
     Patch(#[from] memory::Error),
 
-
+    #[error("user msg hook error: {0}")]
+    UserMsg(#[from] user_msg::Error<'static>),
 }
 
 struct Hook {
@@ -64,7 +65,7 @@ impl Hook {
         Ok(Hook {
             _client: unsafe { hook_client_funcs(screen_fade)? },
             _panel: panel::Hook::new(&modules.vgui2)?,
-            _user_msg: user_msg::Hook::new(),
+            _user_msg: unsafe { user_msg::Hook::new()? },
         })
     }
 }
@@ -155,8 +156,8 @@ unsafe fn init_user_msg() -> Result<()> {
         8B 35 50 8D B5 04
         load_head:  mov esi,dword ptr ds:[4B58D50]
     */
-    let head_of_user_msg_linked_list: *const *const user_msg_s = inner_function.add(13).cast();
-    USER_MSG = head_of_user_msg_linked_list.read_unaligned();
+    let head_of_user_msg_linked_list: *const *const *mut user_msg_s = inner_function.add(13).cast();
+    USER_MSG = head_of_user_msg_linked_list.read_unaligned().read();
     memory::ptr_check(USER_MSG)?;
     info!("USER_MSG = {:?}", USER_MSG);
     Ok(())
