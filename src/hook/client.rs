@@ -132,7 +132,6 @@ unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelnam
     }
 
     ret
-
 }
 
 unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: *const entity_state_s) {
