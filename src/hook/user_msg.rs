@@ -60,6 +60,10 @@ impl user_msg_s {
         iter::successors(Some(self), |current| unsafe { current.next.as_ref() })
     }
 
+    pub fn name(&self) -> &CStr {
+        unsafe { CStr::from_ptr(self.szName.as_ptr()) }
+    }
+
     fn find<'n>(&mut self, name: &'n str) -> Result<*mut Self, Error<'n>> {
         let mut messages = iter::successors(
             Some(self),
@@ -67,10 +71,7 @@ impl user_msg_s {
         );
 
         messages
-            .find(|user_msg| {
-                let msg_name = unsafe { CStr::from_ptr(user_msg.szName.as_ptr()) };
-                msg_name.to_bytes() == name.as_bytes()
-            })
+            .find(|user_msg| user_msg.name().to_bytes() == name.as_bytes())
             .map(|user_msg| user_msg as *mut _)
             .ok_or(Error::MsgNotFound(name))
     }
