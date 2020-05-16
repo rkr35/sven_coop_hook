@@ -51,7 +51,6 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
             
             single_thread_verifier::notice();
 
-            msg_box(w!("Press OK to hook."), w!("info"));
             if let Err(e) = hook::run() {
                 error!("hook error: {}", e);
                 idle();
