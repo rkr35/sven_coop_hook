@@ -8,12 +8,12 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [profile.dev]
-panic = 'unwind'
+panic = "unwind"
 debug = true
 
 [profile.release]
-panic = 'unwind'
-lto = 'fat'
+panic = "abort"
+lto = "fat"
 codegen-units = 1
 debug = true
 
