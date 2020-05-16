@@ -2,7 +2,7 @@ use std::io::{self, Read};
 use std::panic;
 use std::ptr;
 
-use log::{error, info, warn};
+use log::{error, info};
 use simplelog::{Config, LevelFilter, TermLogger, TerminalMode};
 use wchar::wch_c as w;
 use winapi::{
@@ -49,8 +49,7 @@ extern "system" fn on_attach(dll: LPVOID) -> DWORD {
         } else {
             info!("Initialized logger.");
             
-            #[cfg(not(feature = "single_thread_verifier"))]
-            warn!("We will **NOT** verify that only a single thread accesses all the hooked functions.");
+            single_thread_verifier::notice();
 
             msg_box(w!("Press OK to hook."), w!("info"));
             if let Err(e) = hook::run() {
