@@ -32,6 +32,7 @@ impl Hook {
             (*client_funcs).V_CalcRefdef = Some(my_calc_ref_def);
             (*client_funcs).HUD_AddEntity = Some(my_hud_add_entity);
             (*client_funcs).HUD_ProcessPlayerState = Some(my_hud_process_player_state);
+            (*client_funcs).HUD_Frame = Some(my_hud_frame);
         }
 
         Self {
@@ -139,4 +140,9 @@ unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: 
 
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_ProcessPlayerState.yank();
     original(dst, src)
+}
+
+unsafe extern "C" fn my_hud_frame(time: f64) {
+    let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_Frame.yank();
+    original(time);
 }
