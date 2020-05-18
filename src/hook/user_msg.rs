@@ -56,7 +56,7 @@ impl Drop for Single {
 }
 
 impl user_msg_s {
-    pub fn iter(&self) -> impl Iterator<Item = &Self> {
+    fn _iter(&self) -> impl Iterator<Item = &Self> {
         iter::successors(Some(self), |current| unsafe { current.next.as_ref() })
     }
 
