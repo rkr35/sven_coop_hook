@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+#![allow(clippy::find_map)]
 use std::io::{self, Read};
 use std::panic;
 use std::ptr;

@@ -20,6 +20,7 @@ pub mod surface {
             18 print_text_impl(text: *const wchar_t, len: i32),
         }
 
+        #[allow(clippy::cast_possible_truncation, clippy::cast_possible_wrap)]
         pub fn print_text(&self, text: &[u16]) {
             self.print_text_impl(text.as_ptr(), text.len() as i32);
         }

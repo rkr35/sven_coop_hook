@@ -103,6 +103,8 @@ impl Module {
 
     unsafe fn get_info(handle: HMODULE) -> Option<MODULEINFO> {
         let mut info = MaybeUninit::<MODULEINFO>::uninit();
+
+        #[allow(clippy::cast_possible_truncation)]
         let size = mem::size_of::<MODULEINFO>() as u32;
 
         if GetModuleInformation(GetCurrentProcess(), handle, info.as_mut_ptr(), size) == 0 {
