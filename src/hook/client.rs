@@ -2,20 +2,21 @@ use crate::game::{cl_clientfuncs_s, cl_entity_s, entity_state_s, ref_params_s, u
 use crate::single_thread_verifier;
 use crate::yank::Yank;
 
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use std::ffi::CStr;
-use std::hash::BuildHasherDefault;
+// use std::hash::BuildHasherDefault;
 use std::os::raw::c_char;
 
-use log::{info, warn};
-use rustc_hash::FxHasher;
+use bstr::BStr;
+use log::info;
+// use rustc_hash::FxHasher;
 
-type FxBuilderHasher = BuildHasherDefault<FxHasher>;
+// type FxBuilderHasher = BuildHasherDefault<FxHasher>;
 
 // BEGIN MUTABLE GLOBAL STATE
 use crate::hook::ORIGINAL_CLIENT_FUNCS;
 use crate::hook::PLAYER_MOVE;
-static mut ENTITIES: Option<HashMap<i32, *mut cl_entity_s, FxBuilderHasher>> = None;
+// static mut ENTITIES: Option<HashMap<i32, Entity, FxBuilderHasher>> = None;
 // END MUTABLE GLOBAL STATE
 
 pub struct Hook {
@@ -26,7 +27,7 @@ impl Hook {
     pub fn new(client_funcs: *mut cl_clientfuncs_s) -> Self {
         unsafe {
             // Used by hooks. Must initialize before hooking.
-            ENTITIES = Some(HashMap::default());
+            // ENTITIES = Some(HashMap::default());
 
             (*client_funcs).CL_CreateMove = Some(my_create_move);
             (*client_funcs).V_CalcRefdef = Some(my_calc_ref_def);
@@ -91,48 +92,28 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
     }
 }
 
-// Idea.
-// We don't have to worry about thread-synchronization problems.
-// These 3 client functions run on the same thread.
-// There is no context-switching among these functions (and likely all the client functions).
-// Use a HashSet where the elements are keyed by their *mut cl_entity_s.
-// Add entities if you haven't already (HashSet takes care of existing entry requirement).
-// Remove entities when you detect they are no longer valid.
-// TODO: How do you check if an entity is valid if you only have a dangling pointer to that entity?
-// Replaced with HashMap to key by index (not using array; sparse elements).
-// Probably true: ENTITIES[i] is not a dangling pointer if initialized at least once within the
-// map. 
-// Max entities: 8192 ?
-// 
 unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
     single_thread_verifier::assert();
 
-    let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_AddEntity.yank();
-    let ret = original(typ, ent, modelname);
-
     let index = (*ent).index;
 
-    if index == 0 {
-        return ret;
-    }
+    if index != 0 && !ent.is_null() && !modelname.is_null() {
+        const MODELS_PREFIX: [u8; 7] = *b"models/";
+        
+        let name = CStr::from_ptr(modelname).to_bytes();
+        
+        if name.starts_with(&MODELS_PREFIX) {
+            if let Some(name) = name.rsplitn(2, |&byte| byte == b'/').next() {
+                let name: &BStr = name.into();
+                info!("{:?}", name);
 
-    if let Some(prev_ent) = ENTITIES.yank_mut().insert(index, ent) {
-        if prev_ent != ent {
-            warn!(
-                "Replaced entity with index={} and modelname={:?} with entity that has modelname={:?}",
-                index,
-                CStr::from_ptr({
-                    let model = (*prev_ent).model;
-                    (*model).name.as_ptr()
-                }),
-                CStr::from_ptr(modelname)
-            );
+                // todo: Entity management.
+            }
         }
-    } else {
-        info!("Added entity with index={} and modelname={:?}", (*ent).index, CStr::from_ptr(modelname));
     }
 
-    ret
+    let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_AddEntity.yank();
+    original(typ, ent, modelname)
 }
 
 unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: *const entity_state_s) {
