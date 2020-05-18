@@ -84,3 +84,10 @@ unsafe extern "C" fn my_health(name: *const c_char, size: i32, buf: *mut c_void)
     let original = HEALTH.yank();
     original(name, size, buf)
 }
+
+unsafe fn _print_buffer(size: i32, buf: *mut c_void) {
+    let size = size as usize;
+    let buf: *const u8 = buf.cast();
+    let buf = std::slice::from_raw_parts(buf, size);
+    info!("{:?}", buf);
+}
