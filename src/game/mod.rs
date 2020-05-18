@@ -9,6 +9,7 @@ pub mod hw;
 pub mod vgui2;
 
 use std::ffi::CStr;
+use std::iter;
 
 use ultraviolet::Vec3 as vec3_t;
 include!(concat!(env!("OUT_DIR"), "/sdk.rs"));
@@ -31,5 +32,26 @@ impl cl_entity_s {
             let name = (*model).name.as_ptr();
             CStr::from_ptr(name)
         })
+    }
+}
+
+impl user_msg_s {
+    fn _iter(&self) -> impl Iterator<Item = &Self> {
+        iter::successors(Some(self), |current| unsafe { current.next.as_ref() })
+    }
+
+    pub fn name(&self) -> &CStr {
+        unsafe { CStr::from_ptr(self.szName.as_ptr()) }
+    }
+
+    pub fn find<'n>(&mut self, name: &'n str) -> Option<*mut Self> {
+        let mut messages = iter::successors(
+            Some(self),
+            |current| unsafe { current.next.as_mut() }
+        );
+
+        messages
+            .find(|user_msg| user_msg.name().to_bytes() == name.as_bytes())
+            .map(|user_msg| user_msg as *mut _)
     }
 }
