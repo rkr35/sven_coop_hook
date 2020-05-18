@@ -1,8 +1,6 @@
-use crate::game::{pfnUserMsgHook, user_msg_s};
+use crate::game::pfnUserMsgHook;
 use crate::yank::Yank;
 
-use std::ffi::CStr;
-use std::iter;
 use std::os::raw::{c_char, c_void};
 
 use log::info;
@@ -55,30 +53,8 @@ impl Drop for Single {
     }
 }
 
-impl user_msg_s {
-    fn _iter(&self) -> impl Iterator<Item = &Self> {
-        iter::successors(Some(self), |current| unsafe { current.next.as_ref() })
-    }
-
-    pub fn name(&self) -> &CStr {
-        unsafe { CStr::from_ptr(self.szName.as_ptr()) }
-    }
-
-    fn find<'n>(&mut self, name: &'n str) -> Result<*mut Self, Error<'n>> {
-        let mut messages = iter::successors(
-            Some(self),
-            |current| unsafe { current.next.as_mut() }
-        );
-
-        messages
-            .find(|user_msg| user_msg.name().to_bytes() == name.as_bytes())
-            .map(|user_msg| user_msg as *mut _)
-            .ok_or(Error::MsgNotFound(name))
-    }
-}
-
 unsafe fn hook(message_name: &str, hook: pfnUserMsgHook) -> Result<pfnUserMsgHook, Error> {
-    let user_msg = (*USER_MSG).find(message_name)?;
+    let user_msg = (*USER_MSG).find(message_name).ok_or(Error::MsgNotFound(message_name))?;
 
     // TODO: Investigate.
     // We are setting `pfn` in our hook thread.
