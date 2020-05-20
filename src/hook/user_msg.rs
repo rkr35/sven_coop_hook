@@ -1,14 +1,12 @@
 use crate::game::pfnUserMsgHook;
-use crate::yank::Yank;
 
-use std::os::raw::{c_char, c_void};
+use std::os::raw::c_void;
 
 use log::info;
 use thiserror::Error;
 
 // BEGIN MUTABLE GLOBAL STATE
 use crate::hook::USER_MSG;
-static mut HEALTH: pfnUserMsgHook = None;
 // END MUTABLE GLOBAL STATE
 
 #[derive(Error, Debug)]
@@ -18,13 +16,11 @@ pub enum Error<'a> {
 }
 
 pub struct Hook {
-    _health: Single,
 }
 
 impl Hook {
     pub unsafe fn new() -> Result<Self, Error<'static>> {
         Ok(Self {
-            _health: Single::new("Health", &mut HEALTH, Some(my_health))?,
         })
     }
 }
@@ -78,11 +74,6 @@ unsafe fn hook(message_name: &str, hook: pfnUserMsgHook) -> Result<pfnUserMsgHoo
 
     info!("Found user_msg_s \"{}\" at {:?}. The original function is at {:#x}.", message_name, user_msg, original.unwrap() as usize);
     Ok(original)
-}
-
-unsafe extern "C" fn my_health(name: *const c_char, size: i32, buf: *mut c_void) -> i32 {
-    let original = HEALTH.yank();
-    original(name, size, buf)
 }
 
 unsafe fn _print_buffer(size: i32, buf: *mut c_void) {
