@@ -11,7 +11,7 @@ use log::{error, info};
 use thiserror::Error;
 
 mod client;
-// mod opengl;
+mod opengl;
 mod panel;
 mod user_msg;
 
@@ -45,13 +45,13 @@ pub enum Error<'a> {
     #[error("user msg hook error: {0}")]
     UserMsg(#[from] user_msg::Error<'static>),
 
-    // #[error("opengl hook error: {0}")]
-    // OpenGl(#[from] opengl::Error<'static>])
+    #[error("opengl hook error: {0}")]
+    OpenGl(#[from] opengl::Error<'static>),
 }
 
 struct Hook {
     _client: client::Hook,
-    // _opengl: opengl::Hook,
+    _opengl: opengl::Hook,
     _panel: panel::Hook,
     _user_msg: user_msg::Hook,
 }
@@ -69,7 +69,7 @@ impl Hook {
 
         Ok(Hook {
             _client: unsafe { hook_client_funcs(screen_fade)? },
-            // _opengl: unsafe { opengl::Hook::new()? },
+            _opengl: unsafe { opengl::Hook::new()? },
             _panel: panel::Hook::new(&modules.vgui2)?,
             _user_msg: unsafe { user_msg::Hook::new()? },
         })
