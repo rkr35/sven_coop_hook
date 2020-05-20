@@ -7,37 +7,12 @@ typedef struct vec3_s {
     float x, y, z;
 } vec3_t;
 
-#include "common\interface.h"
 #include "common\wrect.h"
 #include "common\cl_dll.h"
 #include "engine\cdll_int.h"
-#include "common\r_studioint.h"
 #include "common\com_model.h"
 #include "common\cl_entity.h"
-#include "common\ref_params.h"
 #include "pm_shared\pm_defs.h"
-#include "pm_shared\pm_movevars.h"
-#include "engine\studio.h"
-#include "parsemsg.h"
-#include "common\cvardef.h"
-#include "common\triangleapi.h"
-#include "common\pmtrace.h"
-#include "common\event_api.h"
-#include "common\r_efx.h"
-#include "common\entity_types.h"
-#include "common\screenfade.h"
-#include "common\net_api.h"
-
-#include "VGUI\VGUI_Frame.h"
-#include "VGUI\VGUI_Panel.h"
-#include "GameUI\IVGuiModuleLoader.h"
-#include "GameUI\IRunGameEngine.h"
-#include "GameUI\IGameUI.h"
-#include "GameUI\IGameConsole.h"
-#include "VGUI2\IHTML.h"
-#include "VGUI2\IPanel.h"
-#include "VGUI2\ISurface.h"
-#include "VGUI2\IEngineVGui.h"
 
 typedef struct cl_clientfuncs_s
 {
