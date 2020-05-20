@@ -31,7 +31,9 @@ struct Single {
 }
 
 impl Single {
-    unsafe fn new(name: &'static str, original: &'static mut pfnUserMsgHook, new: pfnUserMsgHook) -> Result<Single, Error<'static>> {
+    unsafe fn _new(name: &'static str, original: &'static mut pfnUserMsgHook,
+                  new: pfnUserMsgHook) -> Result<Single, Error<'static>> {
+
         *original = hook(name, new)?;
 
         Ok(Single {
