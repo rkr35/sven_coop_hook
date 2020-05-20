@@ -74,7 +74,9 @@ unsafe fn hook(message_name: &str, hook: pfnUserMsgHook) -> Result<pfnUserMsgHoo
     let original = (*user_msg).pfn;
     (*user_msg).pfn = hook;
 
-    info!("Found user_msg_s \"{}\" at {:?}. The original function is at {:#x}.", message_name, user_msg, original.unwrap() as usize);
+    info!("Found user_msg_s \"{}\" at {:?}. The original function is at {:#x}.",
+          message_name, user_msg, original.unwrap() as usize);
+    
     Ok(original)
 }
 
