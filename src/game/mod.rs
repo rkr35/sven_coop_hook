@@ -33,6 +33,10 @@ impl cl_entity_s {
             CStr::from_ptr(name)
         })
     }
+
+    pub fn is_alive(&self) -> bool {
+        self.curstate.solid == 3
+    }
 }
 
 impl user_msg_s {
