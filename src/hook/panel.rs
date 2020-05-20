@@ -1,5 +1,5 @@
 use crate::memory::{self, Patch};
-use crate::module::{self, Module};
+use crate::module::{self, GameModule};
 use crate::game::vgui2;
 
 use std::mem::{self, ManuallyDrop};
@@ -43,7 +43,7 @@ impl Drop for Hook {
 }
 
 impl Hook {
-    pub fn new(vgui2: &Module) -> Result<Hook, Error<'static>> {
+    pub fn new(vgui2: &GameModule) -> Result<Hook, Error<'static>> {
         let panel = vgui2.create_interface::<vgui2::Panel>(vgui2::panel::INTERFACE)?;
 
         info!("panel = {:#x?}", panel);

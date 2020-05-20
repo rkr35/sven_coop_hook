@@ -50,42 +50,41 @@ impl<'a> Error<'a> {
 
 #[derive(Debug)]
 pub struct Module {
+    module: HMODULE,
     pub name: String,
     pub base: usize,
     pub size: usize,
     pub end: usize,
-    create_interface: usize,
 }
 
 impl Module {
     pub fn from(name: &str) -> Result<Module, Error> {
-        let (info, create_interface) = unsafe {
+        let (module, info) = unsafe {
             let module = Module::get_handle(name)?;
+
             let info = Module::get_info(module).ok_or_else(|| Error::new(name, ErrorKind::GetModuleInformation))?;
-
-            let create_interface = GetProcAddress(module, b"CreateInterface\0".as_ptr().cast());
-    
-            if create_interface.is_null() {
-                return Err(Error::new(name, ErrorKind::GetCreateInterface));
-            }
-
-            (info, create_interface as usize)
+            
+            (module, info)
         };
         
         let base = info.lpBaseOfDll as usize;
         let size = info.SizeOfImage as usize;
 
         let module = Module {
+            module,
             name: String::from(name),
             base,
             size,
             end: base + size,
-            create_interface,
         };
 
         log::info!("{:#x?}", module);
 
         Ok(module)
+    }
+
+    pub unsafe fn get_proc_address(&self, proc: &[u8]) -> Option<usize> {
+        get_proc_address(self.module, proc)
     }
 
     fn get_handle(name: &str) -> Result<HMODULE, Error> {
@@ -112,30 +111,6 @@ impl Module {
         } else {
             Some(info.assume_init())
         }
-    }
-
-    pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<*mut T, Error<'n>> {
-        type CreateInterface<T> =
-            extern "C" fn(name: *const c_char, return_code: *mut i32) -> *mut T;
-
-        let create_interface =
-            unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
-        
-        let interface = 
-            CString::new(name).map_err(|nul_error| {
-                Error::new(
-                    &self.name,
-                    ErrorKind::StrConversion(name, nul_error.nul_position()),
-                )
-            })?;
-
-        let interface =
-            create_interface(interface.as_ptr(), ptr::null_mut());
-        
-        memory::ptr_check(interface)
-            .map_err(|e| Error::new(&self.name, ErrorKind::BadInterface(name, e)))?;
-
-        Ok(interface)
     }
 
     pub fn find_bytes(&self, find_me: &[u8]) -> Option<*const u8> {
@@ -168,5 +143,61 @@ impl Module {
                     .zip(window.iter())
                     .all(|(pattern_byte, module_byte)| pattern_byte.map_or(true, |p| p == *module_byte)))
             .map(|window| window.as_ptr() as usize)
+    }
+}
+
+#[derive(Debug)]
+pub struct GameModule {
+    pub module: Module,
+    create_interface: usize,
+}
+
+impl GameModule {
+    pub fn from(name: &str) -> Result<GameModule, Error> {
+        let module = Module::from(name)?;
+
+        let create_interface = unsafe {
+            get_proc_address(module.module, b"CreateInterface\0")
+                .ok_or(Error::new(name, ErrorKind::GetCreateInterface))?
+        };
+
+        Ok(GameModule {
+            module,
+            create_interface, 
+        })
+    }
+
+    pub fn create_interface<'n, T>(&self, name: &'n str) -> Result<*mut T, Error<'n>> {
+        type CreateInterface<T> =
+            extern "C" fn(name: *const c_char, return_code: *mut i32) -> *mut T;
+
+        let create_interface =
+            unsafe { mem::transmute::<usize, CreateInterface<T>>(self.create_interface) };
+        
+        let interface = 
+            CString::new(name).map_err(|nul_error| {
+                Error::new(
+                    &self.module.name,
+                    ErrorKind::StrConversion(name, nul_error.nul_position()),
+                )
+            })?;
+
+        let interface =
+            create_interface(interface.as_ptr(), ptr::null_mut());
+        
+        memory::ptr_check(interface)
+            .map_err(|e| Error::new(&self.module.name, ErrorKind::BadInterface(name, e)))?;
+
+        Ok(interface)
+    }
+}
+
+unsafe fn get_proc_address(module: HMODULE, proc: &[u8]) -> Option<usize> {
+    let pointer = GetProcAddress(module, proc.as_ptr().cast());
+
+    if pointer.is_null() {
+        None
+    } else {
+        Some(pointer as usize)
     }
 }

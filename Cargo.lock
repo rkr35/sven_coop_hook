@@ -122,6 +122,9 @@ name = "cc"
 version = "1.0.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d87b23d6a92cd03af510a5ade527033f6aa6fa92161e2d5863a907d4c5e31d"
+dependencies = [
+ "jobserver",
+]
 
 [[package]]
 name = "cexpr"
@@ -193,6 +196,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "detours-sys"
+version = "0.1.2"
+source = "git+https://github.com/rkr35/detours#359dcb6953114b079199e077e485b1a3cc58fed1"
+dependencies = [
+ "bindgen",
+ "cc",
+]
+
+[[package]]
 name = "dirs"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -260,6 +272,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df004cfca50ef23c36850aaaa59ad52cc70d0e90243c3c7737a4dd32dc7a3c4f"
 dependencies = [
  "quick-error",
+]
+
+[[package]]
+name = "jobserver"
+version = "0.1.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c71313ebb9439f74b00d9d2dcec36440beaf57a6aa0623068441dd7cd81a7f2"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -467,6 +488,7 @@ version = "0.1.0"
 dependencies = [
  "bindgen",
  "bstr",
+ "detours-sys",
  "log",
  "once_cell",
  "rustc-hash",

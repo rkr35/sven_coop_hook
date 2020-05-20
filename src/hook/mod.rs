@@ -2,7 +2,7 @@ use crate::game::{cl_clientfuncs_s, cl_enginefuncs_s, playermove_s, user_msg_s};
 use crate::game::hw;
 use crate::idle;
 use crate::memory;
-use crate::module::{self, Module};
+use crate::module::{self, Module, GameModule};
 
 use std::mem;
 use std::ptr;
@@ -11,6 +11,7 @@ use log::{error, info};
 use thiserror::Error;
 
 mod client;
+// mod opengl;
 mod panel;
 mod user_msg;
 
@@ -43,17 +44,21 @@ pub enum Error<'a> {
 
     #[error("user msg hook error: {0}")]
     UserMsg(#[from] user_msg::Error<'static>),
+
+    // #[error("opengl hook error: {0}")]
+    // OpenGl(#[from] opengl::Error<'static>])
 }
 
 struct Hook {
     _client: client::Hook,
+    // _opengl: opengl::Hook,
     _panel: panel::Hook,
     _user_msg: user_msg::Hook,
 }
 
 impl Hook {
     fn new(modules: &Modules) -> Result<Hook> {
-        let screen_fade = get_screen_fade_instruction(&modules.hw)?;
+        let screen_fade = get_screen_fade_instruction(&modules.hw.module)?;
 
         unsafe {
             init_surface(&modules.hw)?;
@@ -64,6 +69,7 @@ impl Hook {
 
         Ok(Hook {
             _client: unsafe { hook_client_funcs(screen_fade)? },
+            // _opengl: unsafe { opengl::Hook::new()? },
             _panel: panel::Hook::new(&modules.vgui2)?,
             _user_msg: unsafe { user_msg::Hook::new()? },
         })
@@ -71,15 +77,17 @@ impl Hook {
 }
 
 struct Modules {
-    hw: Module,
-    vgui2: Module,
+    hw: GameModule,
+    opengl: Module,
+    vgui2: GameModule,
 }
 
 impl Modules {
     fn new() -> Result<Modules> {
         Ok(Modules {
-            hw: Module::from("hw.dll")?,
-            vgui2: Module::from("vgui2.dll")?,
+            hw: GameModule::from("hw.dll")?,
+            opengl: Module::from("opengl32.dll")?,
+            vgui2: GameModule::from("vgui2.dll")?,
         })
     }
 }
@@ -101,7 +109,7 @@ fn get_screen_fade_instruction(hw: &Module) -> Result<*const u8> {
         .ok_or(Error::NotFoundBytes("push ScreenFade instruction"))?)
 }
 
-unsafe fn init_surface(hw: &Module) -> Result<()> {
+unsafe fn init_surface(hw: &GameModule) -> Result<()> {
     SURFACE = hw.create_interface::<hw::Surface>(hw::surface::INTERFACE)?;
     info!("SURFACE = {:?}", SURFACE);
     Ok(())
