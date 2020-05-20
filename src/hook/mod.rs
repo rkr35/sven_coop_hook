@@ -76,6 +76,7 @@ impl Hook {
     }
 }
 
+#[derive(Debug)]
 struct Modules {
     hw: GameModule,
     opengl: Module,
@@ -182,6 +183,7 @@ unsafe fn hook_client_funcs(screen_fade: *const u8) -> Result<client::Hook> {
 
 pub fn run() -> Result<()> {
     let modules = Modules::new()?;
+    log::info!("{:#x?}", modules);
     let _hook = Hook::new(&modules)?;
     idle();
     Ok(())

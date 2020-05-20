@@ -77,9 +77,7 @@ impl Module {
             size,
             end: base + size,
         };
-
-        log::info!("{:#x?}", module);
-
+        
         Ok(module)
     }
 
