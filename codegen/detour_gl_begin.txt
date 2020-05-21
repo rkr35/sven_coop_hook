@@ -1,0 +1,19 @@
+73B8EAD0 <opengl32.glBegin>         | E9 EB7D33ED                             | jmp <sven_coop_hook.sven_coop_hook::hook::opengl::my_gl_begin>                       |
+73B8EAD5                            | 64:A1 18000000                          | mov eax,dword ptr fs:[18]                                                            |
+73B8EADB                            | 56                                      | push esi                                                                             |
+73B8EADC                            | FF75 08                                 | push dword ptr ss:[ebp+8]                                                            |
+73B8EADF                            | 8BB0 CC070000                           | mov esi,dword ptr ds:[eax+7CC]                                                       |
+73B8EAE5                            | 8BCE                                    | mov ecx,esi                                                                          |
+73B8EAE7                            | FF15 B434C573                           | call dword ptr ds:[73C534B4]                                                         |
+73B8EAED                            | FFD6                                    | call esi                                                                             |
+73B8EAEF                            | 5E                                      | pop esi                                                                              |
+73B8EAF0                            | 5D                                      | pop ebp                                                                              |
+73B8EAF1                            | C2 0400                                 | ret 4                                                                                |
+
+60EC68C0 <sven_coop_hook.sven_coop_ | A1 0461F060                             | mov eax,dword ptr ds:[<ORIGINAL_GL_BEGIN>]                                           | opengl.rs:58
+60EC68C5                            | FFE0                                    | jmp eax                                                                              | opengl.rs:59
+
+6BB700D8                            | 66:90                                   | nop                                                                                  |
+6BB700DA                            | 55                                      | push ebp                                                                             |
+6BB700DB                            | 8BEC                                    | mov ebp,esp                                                                          |
+6BB700DD                            | E9 F3E90108                             | jmp opengl32.73B8EAD5                                                                |

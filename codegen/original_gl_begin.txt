@@ -1,0 +1,12 @@
+73B8EAD2                            | 55                                      | push ebp                                                                             |
+73B8EAD3                            | 8BEC                                    | mov ebp,esp                                                                          |
+73B8EAD5                            | 64:A1 18000000                          | mov eax,dword ptr fs:[18]                                                            |
+73B8EADB                            | 56                                      | push esi                                                                             |
+73B8EADC                            | FF75 08                                 | push dword ptr ss:[ebp+8]                                                            |
+73B8EADF                            | 8BB0 CC070000                           | mov esi,dword ptr ds:[eax+7CC]                                                       |
+73B8EAE5                            | 8BCE                                    | mov ecx,esi                                                                          |
+73B8EAE7                            | FF15 B434C573                           | call dword ptr ds:[73C534B4]                                                         |
+73B8EAED                            | FFD6                                    | call esi                                                                             |
+73B8EAEF                            | 5E                                      | pop esi                                                                              |
+73B8EAF0                            | 5D                                      | pop ebp                                                                              |
+73B8EAF1                            | C2 0400                                 | ret 4                                                                                |
