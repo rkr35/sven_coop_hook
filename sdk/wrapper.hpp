@@ -2,6 +2,7 @@
 DECLARE_HANDLE(HSPRITE);
 typedef void *PVOID;
 typedef unsigned long DWORD;
+typedef unsigned int GLenum;
 
 typedef struct vec3_s {
     float x, y, z;

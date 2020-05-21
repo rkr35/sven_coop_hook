@@ -69,7 +69,7 @@ impl Hook {
 
         Ok(Hook {
             _client: unsafe { hook_client_funcs(screen_fade)? },
-            _opengl: unsafe { opengl::Hook::new()? },
+            _opengl: unsafe { opengl::Hook::new(&modules.opengl)? },
             _panel: panel::Hook::new(&modules.vgui2)?,
             _user_msg: unsafe { user_msg::Hook::new()? },
         })

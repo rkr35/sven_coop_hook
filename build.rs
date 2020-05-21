@@ -38,6 +38,7 @@ fn main() {
         .whitelist_type("cl_enginefuncs_s")
         .whitelist_type("cl_clientfuncs_s")
         .whitelist_type("user_msg_s")
+        .whitelist_type("GLenum")
         // Format
         .rustfmt_bindings(true)
         // Use Rust enums instead of constants to represent enum variants.
