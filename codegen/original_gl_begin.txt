@@ -10,3 +10,13 @@
 73B8EAEF                            | 5E                                      | pop esi                                                                              |
 73B8EAF0                            | 5D                                      | pop ebp                                                                              |
 73B8EAF1                            | C2 0400                                 | ret 4                                                                                |
+
+Interesting. There's a table of function pointers at EAX:
+    mov eax,dword ptr fs:[18]
+
+At offset 0x7cc, we get a pointer to atioglxx.dll's implementation of glBegin.
+    mov esi,dword ptr ds:[eax+7CC] 
+    ...
+    call esi 
+
+Why not just hook by changing the function pointer?
