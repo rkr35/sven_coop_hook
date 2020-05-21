@@ -20,3 +20,11 @@ At offset 0x7cc, we get a pointer to atioglxx.dll's implementation of glBegin.
     call esi 
 
 Why not just hook by changing the function pointer?
+
+Found a related post by billdoor in 2003:
+    http://www.rage3d.com/board/showthread.php?t=33703863
+
+"...Which is almost exactly the same code as in opengl32.dll suggesting that both are just jumping to a function pointer from a table...
+I don't know enough ASM to know what large fs:18h points to but maybe if I can find this table of pointers I can add my hooks in there?"
+
+Curious.
