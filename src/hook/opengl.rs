@@ -24,18 +24,8 @@ pub enum Error<'a> {
 pub struct Hook {}
 
 impl Hook {
-    pub unsafe fn new(module: &Module) -> Result<Self, Error<'static>> {
-        const GL_BEGIN: [u8; 8] = *b"glBegin\0";
-
-        ORIGINAL_GL_BEGIN = module.get_proc_address(&GL_BEGIN)
-            .ok_or(Error::GetProcAddress(GL_BEGIN.as_ref().into()))? as *mut c_void;
-        
-        info!("ORIGINAL_GL_BEGIN={:?}", ORIGINAL_GL_BEGIN);
-        // todo: Check for error codes and bubble up.
-        DetourTransactionBegin();
-        DetourAttach(&mut ORIGINAL_GL_BEGIN, my_gl_begin as *mut _);
-        DetourTransactionCommit();
-
+    pub unsafe fn new(opengl: &Module) -> Result<Self, Error<'static>> {
+        add_detours(opengl)?;
         Ok(Self {})
     }
 }
@@ -43,9 +33,7 @@ impl Hook {
 impl Drop for Hook {
     fn drop(&mut self) {
         unsafe {
-            DetourTransactionBegin();
-            DetourDetach(&mut ORIGINAL_GL_BEGIN, my_gl_begin as *mut _);
-            DetourTransactionCommit();
+            remove_detours();
         }
     }
 }
@@ -55,4 +43,25 @@ unsafe extern "system" fn my_gl_begin(mode: GLenum) {
     type GlBegin = unsafe extern "system" fn (mode: GLenum);
     let original = mem::transmute::<*mut c_void, GlBegin>(ORIGINAL_GL_BEGIN);
     original(mode);
+}
+
+unsafe fn add_detours(opengl: &Module) -> Result<(), Error<'static>> {
+    const GL_BEGIN: [u8; 8] = *b"glBegin\0";
+
+    ORIGINAL_GL_BEGIN = opengl.get_proc_address(&GL_BEGIN)
+        .ok_or(Error::GetProcAddress(GL_BEGIN.as_ref().into()))? as *mut c_void;
+    
+    info!("ORIGINAL_GL_BEGIN={:?}", ORIGINAL_GL_BEGIN);
+    // todo: Check for error codes and bubble up.
+    DetourTransactionBegin();
+    DetourAttach(&mut ORIGINAL_GL_BEGIN, my_gl_begin as *mut _);
+    DetourTransactionCommit();
+
+    Ok(())
+}
+
+unsafe fn remove_detours() {
+    DetourTransactionBegin();
+    DetourDetach(&mut ORIGINAL_GL_BEGIN, my_gl_begin as *mut _);
+    DetourTransactionCommit();
 }
