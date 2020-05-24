@@ -145,6 +145,7 @@ impl Module {
 }
 
 #[derive(Debug)]
+#[allow(clippy::module_name_repetitions)]
 pub struct GameModule {
     pub module: Module,
     create_interface: usize,
