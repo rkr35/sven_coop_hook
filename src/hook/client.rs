@@ -105,9 +105,7 @@ unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
 
     let name = CStr::from_ptr(modelname).to_bytes();
 
-    let is_model = name.ends_with(&MODELS_SUFFIX);
-
-    if !is_model {
+    if !is_model(name) {
         return;
     }
 
@@ -157,4 +155,9 @@ unsafe extern "C" fn my_hud_frame(time: f64) {
 
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_Frame.yank();
     original(time);
+}
+
+fn is_model(name: &[u8]) -> bool {
+    const MODELS_SUFFIX: [u8; 4] = *b".mdl";
+    name.ends_with(&MODELS_SUFFIX)
 }
