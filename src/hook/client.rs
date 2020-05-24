@@ -93,9 +93,13 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
 unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
     const MODELS_SUFFIX: [u8; 4] = *b".mdl";
 
+    if ent.is_null() || modelname.is_null() {
+        return;
+    }
+
     let index = (*ent).index;
 
-    if index == 0 || ent.is_null() || modelname.is_null() {
+    if index == 0 {
         return;
     }
 
