@@ -2,21 +2,21 @@ use crate::game::{cl_clientfuncs_s, cl_entity_s, entity_state_s, ref_params_s, u
 use crate::single_thread_verifier;
 use crate::yank::Yank;
 
-// use std::collections::HashMap;
+use std::collections::HashSet;
 use std::ffi::CStr;
-// use std::hash::BuildHasherDefault;
+use std::hash::BuildHasherDefault;
 use std::os::raw::c_char;
 
 use bstr::BStr;
 use log::info;
-// use rustc_hash::FxHasher;
+use rustc_hash::FxHasher;
 
-// type FxBuilderHasher = BuildHasherDefault<FxHasher>;
+type FxBuilderHasher = BuildHasherDefault<FxHasher>;
 
 // BEGIN MUTABLE GLOBAL STATE
 use crate::hook::ORIGINAL_CLIENT_FUNCS;
 use crate::hook::PLAYER_MOVE;
-// static mut ENTITIES: Option<HashMap<i32, Entity, FxBuilderHasher>> = None;
+static mut ENTITIES: Option<HashSet<*mut cl_entity_s, FxBuilderHasher>> = None;
 // END MUTABLE GLOBAL STATE
 
 pub struct Hook {
@@ -27,7 +27,7 @@ impl Hook {
     pub fn new(client_funcs: *mut cl_clientfuncs_s) -> Self {
         unsafe {
             // Used by hooks. Must initialize before hooking.
-            // ENTITIES = Some(HashMap::default());
+            ENTITIES = Some(HashSet::default());
 
             (*client_funcs).CL_CreateMove = Some(my_create_move);
             (*client_funcs).V_CalcRefdef = Some(my_calc_ref_def);
@@ -92,25 +92,47 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
     }
 }
 
-unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
-    single_thread_verifier::assert();
+unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
+    const MODELS_SUFFIX: [u8; 4] = *b".mdl";
 
     let index = (*ent).index;
 
-    if index != 0 && !ent.is_null() && !modelname.is_null() {
-        const MODELS_PREFIX: [u8; 7] = *b"models/";
+    if index == 0 || ent.is_null() || modelname.is_null() {
+        return;
+    }
         
         let name = CStr::from_ptr(modelname).to_bytes();
         
-        if name.starts_with(&MODELS_PREFIX) {
-            if let Some(name) = name.rsplitn(2, |&byte| byte == b'/').next() {
-                let name: &BStr = name.into();
-                info!("{:?}", name);
+    let is_model = name.ends_with(&MODELS_SUFFIX);
 
-                // todo: Entity management.
+    if !is_model {
+        return;
+    }
+
+    let name =  name
+        .rsplitn(2, |&byte| byte == b'/')
+        .next();
+
+    if name.is_none() {
+        return;
+    }
+
+    let name = name.unwrap();
+                let name: &BStr = name.into();
+
+    if (*ent).is_alive() {
+        if ENTITIES.yank_mut().insert(ent) {
+            info!("Added {:?} ({:?}).", ent, name);
             }
+    } else if ENTITIES.yank_mut().remove(&ent) {
+        info!("Removed {:?} ({:?}).", ent, name);
         }
     }
+
+unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
+    single_thread_verifier::assert();
+
+    manage_entity(ent, modelname);
 
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_AddEntity.yank();
     original(typ, ent, modelname)
