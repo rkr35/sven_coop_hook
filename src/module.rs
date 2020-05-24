@@ -156,7 +156,7 @@ impl GameModule {
 
         let create_interface = unsafe {
             get_proc_address(module.module, b"CreateInterface\0")
-                .ok_or(Error::new(name, ErrorKind::GetCreateInterface))?
+                .ok_or_else(|| Error::new(name, ErrorKind::GetCreateInterface))?
         };
 
         Ok(GameModule {

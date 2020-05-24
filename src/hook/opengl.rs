@@ -49,7 +49,7 @@ unsafe fn add_detours(opengl: &Module) -> Result<(), Error<'static>> {
     const GL_BEGIN: [u8; 8] = *b"glBegin\0";
 
     ORIGINAL_GL_BEGIN = opengl.get_proc_address(&GL_BEGIN)
-        .ok_or(Error::GetProcAddress(GL_BEGIN.as_ref().into()))? as *mut c_void;
+        .ok_or_else(|| Error::GetProcAddress(GL_BEGIN.as_ref().into()))? as *mut c_void;
     
     info!("ORIGINAL_GL_BEGIN={:?}", ORIGINAL_GL_BEGIN);
     // todo: Check for error codes and bubble up.
