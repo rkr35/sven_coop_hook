@@ -109,14 +109,11 @@ unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
         return;
     }
 
-    let name = name.rsplitn(2, |&byte| byte == b'/').next();
-
-    if name.is_none() {
-        return;
-    }
-
-    let name = name.unwrap();
-    let name: &BStr = name.into();
+    let name: &BStr = name
+        .rsplit(|&byte| byte == b'/')
+        .next()
+        .yank()
+        .into();
 
     if (*ent).is_alive() {
         if ENTITIES.yank_mut().insert(ent) {
