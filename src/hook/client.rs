@@ -36,9 +36,7 @@ impl Hook {
             (*client_funcs).HUD_Frame = Some(my_hud_frame);
         }
 
-        Self {
-            client_funcs
-        }
+        Self { client_funcs }
     }
 }
 
@@ -63,7 +61,7 @@ unsafe fn _bunny_hop(cmd: *mut usercmd_s) {
     (*cmd).buttons &= !IN_JUMP;
 
     let on_ground = (*PLAYER_MOVE).flags & FL_ONGROUND == FL_ONGROUND;
-    
+
     if on_ground || (*PLAYER_MOVE).waterlevel >= 2 {
         (*cmd).buttons |= IN_JUMP;
     }
@@ -86,7 +84,7 @@ unsafe extern "C" fn my_calc_ref_def(params: *mut ref_params_s) {
 
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().V_CalcRefdef.yank();
     original(params);
-    
+
     if params.is_null() {
         return;
     }
@@ -100,36 +98,38 @@ unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
     if index == 0 || ent.is_null() || modelname.is_null() {
         return;
     }
-        
-        let name = CStr::from_ptr(modelname).to_bytes();
-        
+
+    let name = CStr::from_ptr(modelname).to_bytes();
+
     let is_model = name.ends_with(&MODELS_SUFFIX);
 
     if !is_model {
         return;
     }
 
-    let name =  name
-        .rsplitn(2, |&byte| byte == b'/')
-        .next();
+    let name = name.rsplitn(2, |&byte| byte == b'/').next();
 
     if name.is_none() {
         return;
     }
 
     let name = name.unwrap();
-                let name: &BStr = name.into();
+    let name: &BStr = name.into();
 
     if (*ent).is_alive() {
         if ENTITIES.yank_mut().insert(ent) {
             info!("Added {:?} ({:?}).", ent, name);
-            }
+        }
     } else if ENTITIES.yank_mut().remove(&ent) {
         info!("Removed {:?} ({:?}).", ent, name);
-        }
     }
+}
 
-unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelname: *const c_char) -> i32 {
+unsafe extern "C" fn my_hud_add_entity(
+    typ: i32,
+    ent: *mut cl_entity_s,
+    modelname: *const c_char,
+) -> i32 {
     single_thread_verifier::assert();
 
     manage_entity(ent, modelname);
@@ -138,7 +138,10 @@ unsafe extern "C" fn my_hud_add_entity(typ: i32, ent: *mut cl_entity_s, modelnam
     original(typ, ent, modelname)
 }
 
-unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: *const entity_state_s) {
+unsafe extern "C" fn my_hud_process_player_state(
+    dst: *mut entity_state_s,
+    src: *const entity_state_s,
+) {
     single_thread_verifier::assert();
 
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_ProcessPlayerState.yank();
@@ -147,7 +150,7 @@ unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: 
 
 unsafe extern "C" fn my_hud_frame(time: f64) {
     single_thread_verifier::assert();
-    
+
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_Frame.yank();
     original(time);
 }
