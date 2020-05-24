@@ -6,17 +6,19 @@ use std::collections::HashSet;
 use std::ffi::CStr;
 use std::hash::BuildHasherDefault;
 use std::os::raw::c_char;
+use std::ptr;
 
 use bstr::BStr;
 use log::info;
-use rustc_hash::FxHasher;
+use static_assertions as sa;
 
-type FxBuilderHasher = BuildHasherDefault<FxHasher>;
+const MAX_ENTITIES: i32 = 8192;
+sa::const_assert!(MAX_ENTITIES > 0);
 
 // BEGIN MUTABLE GLOBAL STATE
 use crate::hook::ORIGINAL_CLIENT_FUNCS;
 use crate::hook::PLAYER_MOVE;
-static mut ENTITIES: Option<HashSet<*mut cl_entity_s, FxBuilderHasher>> = None;
+static mut ENTITIES: [*mut cl_entity_s; MAX_ENTITIES as usize]  = [ptr::null_mut(); MAX_ENTITIES as usize];
 // END MUTABLE GLOBAL STATE
 
 pub struct Hook {
@@ -26,9 +28,6 @@ pub struct Hook {
 impl Hook {
     pub fn new(client_funcs: *mut cl_clientfuncs_s) -> Self {
         unsafe {
-            // Used by hooks. Must initialize before hooking.
-            ENTITIES = Some(HashSet::default());
-
             (*client_funcs).CL_CreateMove = Some(my_create_move);
             (*client_funcs).V_CalcRefdef = Some(my_calc_ref_def);
             (*client_funcs).HUD_AddEntity = Some(my_hud_add_entity);
@@ -97,9 +96,15 @@ unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
 
     let index = (*ent).index;
 
-    if index == 0 {
+    if index <= 0 || index >= MAX_ENTITIES {
         return;
     }
+
+    // We already check for non-positive indices above.
+    // We are casting from a smaller positive domain to a larger positive domain,
+    // so the cast here from i32 -> usize is lossless.
+    #[allow(clippy::cast_sign_loss)]
+    let index = index as usize;
 
     let name = CStr::from_ptr(modelname).to_bytes();
 
@@ -113,11 +118,15 @@ unsafe fn manage_entity(ent: *mut cl_entity_s, modelname: *const c_char) {
         .yank()
         .into();
 
+    let slot = ENTITIES.get_mut(index).yank();
+
     if (*ent).is_alive() {
-        if ENTITIES.yank_mut().insert(ent) {
+        if slot.is_null() {
+            *slot = ent;
             info!("Added {:?} ({:?}).", ent, name);
         }
-    } else if ENTITIES.yank_mut().remove(&ent) {
+    } else if !slot.is_null() {
+        *slot = ptr::null_mut();
         info!("Removed {:?} ({:?}).", ent, name);
     }
 }
