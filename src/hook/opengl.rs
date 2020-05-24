@@ -7,7 +7,7 @@ use std::mem;
 use std::ptr;
 
 use bstr::BStr;
-use detours_sys::*;
+use detours_sys::{DetourAttach, DetourDetach, DetourTransactionBegin, DetourTransactionCommit};
 use log::info;
 use thiserror::Error;
 
