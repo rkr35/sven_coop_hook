@@ -2,7 +2,7 @@ use crate::game::pfnUserMsgHook;
 
 use std::os::raw::c_void;
 
-use log::info;
+use log::{error, info};
 use thiserror::Error;
 
 // BEGIN MUTABLE GLOBAL STATE
@@ -81,7 +81,14 @@ unsafe fn hook(message_name: &str, hook: pfnUserMsgHook) -> Result<pfnUserMsgHoo
 }
 
 unsafe fn _print_buffer(size: i32, buf: *mut c_void) {
+    if size <= 0 {
+        error!("Buffer has a non-positive size of {} bytes.", size);
+        return;
+    }
+
+    #[allow(clippy::cast_sign_loss)]
     let size = size as usize;
+
     let buf: *const u8 = buf.cast();
     let buf = std::slice::from_raw_parts(buf, size);
     info!("{:?}", buf);
