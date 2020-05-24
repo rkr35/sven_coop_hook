@@ -39,8 +39,10 @@ impl Drop for Hook {
 }
 
 unsafe extern "system" fn my_gl_begin(mode: GLenum) {
-    single_thread_verifier::assert();
     type GlBegin = unsafe extern "system" fn (mode: GLenum);
+    
+    single_thread_verifier::assert();
+    
     let original = mem::transmute::<*mut c_void, GlBegin>(ORIGINAL_GL_BEGIN);
     original(mode);
 }
