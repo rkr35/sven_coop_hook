@@ -124,6 +124,8 @@ unsafe extern "C" fn my_hud_process_player_state(dst: *mut entity_state_s, src: 
 }
 
 unsafe extern "C" fn my_hud_frame(time: f64) {
+    single_thread_verifier::assert();
+    
     let original = ORIGINAL_CLIENT_FUNCS.yank_ref().HUD_Frame.yank();
     original(time);
 }
