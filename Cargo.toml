@@ -26,14 +26,14 @@ bindgen = "0.53"
 bstr = "0.2"
 detours-sys = { git = "https://github.com/rkr35/detours" }
 log = "0.4"
-once_cell = { version = "1.4" }
+once_cell = { version = "1.12" }
 rustc-hash = { version = "1.1", default-features = false }
-simplelog = "0.7"
+simplelog = "0.12"
 static_assertions = "1.1"
 sven_coop_hook_macros = { path = "macros" }
 thiserror = "1.0"
-ultraviolet = "0.4"
-wchar = "0.6"
+ultraviolet = "0.9"
+wchar = "0.11"
 winapi = { version = "0.3", features = [
     "consoleapi",
     "errhandlingapi",
